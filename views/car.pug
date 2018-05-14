@@ -1,0 +1,20 @@
+doctype html
+html
+  head
+    title Add car
+  body
+    h1 Add Car
+    if cars
+      each car in cars
+        li #{car.carName}
+        li #{car.categoryName}
+    script.
+      
+    form(method='post', action='/addCar')
+      label Car
+      br
+      select(id = "categ", name="categoryName")
+        each category in categories
+          option(value=category.categoryName) #{category.categoryName}
+      input(class='categ', type='text', name='carName', placeholder='Enter car name', required='', autocomplete="off")
+      input(type='submit', value='Add Car')

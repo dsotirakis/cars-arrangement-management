@@ -1,0 +1,11 @@
+doctype html
+html
+  head
+    title Add category 
+  body
+    h1 Add Car Category
+    form(method='post', action='/addCategory')
+      label Car category
+      br
+      input(type='text', name='categoryName', placeholder='Enter category name', required='')
+      input(type='submit', value='Add Category')

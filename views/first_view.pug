@@ -1,0 +1,11 @@
+doctype html
+html
+   head
+      title = "Hello Pug"
+   body
+     p.greetings#people Hello World!
+   table
+   ul List
+        if categories
+          each category in categories
+            li #{category.categoryName}
