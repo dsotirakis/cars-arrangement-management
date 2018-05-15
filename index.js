@@ -39,6 +39,14 @@ app.get("/", (req, res) => {
     res.render("index");
 });
 
+var eventSchema = new mongoose.Schema({
+	startDate : Date,
+	endDate : Date,
+	categoryName : String
+});
+
+var Event = mongoose.model("Event", eventSchema);
+
 app.get("/", (req, res) => {
 	db.users.find({}, function(err, docs){
 	res.render("index", {users:docs});
@@ -56,6 +64,17 @@ app.get("/car", (req, res) => {
    			res.render('car', {
 				categories : categories,
 				cars : cars
+			});
+		});
+	});
+});
+
+app.get("/event", (req, res) => {
+	mongoose.model("Event").find(function(err, events) {
+		mongoose.model("Category").find(function (err, categories) {
+   			res.render('event', {
+				categories : categories,
+				events : events
 			});
 		});
 	});
@@ -93,6 +112,16 @@ app.post("/addCar", (req, res) => {
 	});
 });
 
+app.post("/addEvent", (req, res) => {
+	var myData = new Event(req.body);
+	myData.save().then(item => {
+		res.send("Event saved to database!");
+	})
+	.catch(err => {
+		res.status(400).send("Unable to save to database");
+	});
+});
+
 app.get('/test', function(req, res){
 	mongoose.model("Category").find(function(err, categories) {
    	res.render('first_view', {
@@ -103,9 +132,20 @@ app.get('/test', function(req, res){
 
 
 app.get('/groups', function(req, res){
-	mongoose.model("User").find(function(err, users) {
-   	res.render('view', {
-	   users : users
+	mongoose.model("Car").find(function(err, cars) {
+		mongoose.model("Event").find(function (err, events) {
+   			res.render('view', {
+	   			cars : cars,
+	   			events : events
+			});
+   		});
+	});
+});
+
+app.get('/show_events', function(req, res){
+	mongoose.model("Event").find(function(err, events) {
+   	res.render('showEvents', {
+	   events : events
    });
 });
 });

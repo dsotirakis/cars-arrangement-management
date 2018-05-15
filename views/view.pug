@@ -24,26 +24,25 @@ html
       | This example demonstrates editable groups (reordering and hiding).
       button(onclick='showAllGroups()') Restore Hidden
 
-      if users
-        each user in users
-          li #{user.firstName}
+      if cars
+        each car in cars
+          li #{car.carName}
     #visualization
     script.
 
       var options = {};
-      //var lelos = users;
-      var zen = !{JSON.stringify(users)};
+      var carsToString = !{JSON.stringify(cars)};
       var arr = [];
-      var len = zen.length;
+      var len = carsToString.length;
       for (var i = 0; i < len; i++) {
-        arr.push({"content": zen[i].firstName, "id": zen[i].firstName, "value": (i+1), className: 'lele'});
+        arr.push({"content": carsToString[i].carName, "id": carsToString[i].carName, "value": (i+1), className: 'lele'});
       }
 
       var datas = new vis.DataSet(arr);
       
       // http://motocal.com/
       var groups = new vis.DataSet([
-      {"content": zen[1].firstName, "id": zen[1].firstName, "value": 1, className:'openwheel'},
+      {"content": carsToString[1].firstName, "id": carsToString[1].firstName, "value": 1, className:'openwheel'},
       {"content": "lelos", "id": "lelos", "value": 2, className:'rally'},
       {"content": "MotoGP", "id": "MotoGP", "value": 3, className:'motorcycle'},
       {"content": "V8SC", "id": "V8SC", "value": 4, className:'touringcars'},
@@ -75,9 +74,11 @@ html
       };
 
       var arr2 = [];
-
+      alert(new Date(2015,1,2));
+      var eventsToString = !{JSON.stringify(events)};
+      alert(eventsToString[0].startDate);
       for (var i = 0; i < arr.length; i++) {
-        arr2.push({start: new Date(2015, 1, 10), end: new Date(2015, 4, 16), group: arr[i].content, className:"lele", content:"Argentina", id:i});
+        arr2.push({start: eventsToString[i].startDate, end: eventsToString[i].endDate, group: arr[i].content, className:"lele", content:"Argentina" + i, id:i});
       }
       
       var datas2 = new vis.DataSet(arr2);
@@ -85,7 +86,7 @@ html
       alert(JSON.stringify(datas2));
       // note that months are zero-based in the JavaScript Date object, so month 3 is April
       var items = new vis.DataSet([
-      {start: new Date(2017, 0, 10), end: new Date(2015, 0, 11), group: arr[15].content, className:"openwheel", content:"Argentina",id:"531@motocal.net"},
+      {start: new Date(2017, 0, 10), end: new Date(2015, 0, 11), group: "Formula E", className:"openwheel", content:"Argentina",id:"531@motocal.net"},
       {start: new Date(2015, 0, 22), end: new Date(2015, 0, 26), group:"lelos", className:"rally", content:"Rallye Monte-Carlo",id:"591@motocal.net"},
       {start: new Date(2015, 1, 4), end: new Date(2015, 1, 8), group:"MotoGP", className:"motorcycle", content:"Sepang MotoGP Test 1",id:"578@motocal.net"},
       {start: new Date(2015, 1, 12), end: new Date(2015, 1, 16), group:"lelos", className:"rally", content:"Rally Sweden",id:"592@motocal.net"},
