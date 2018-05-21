@@ -74,11 +74,16 @@ html
       };
 
       var arr2 = [];
-      alert(new Date(2015,1,2));
       var eventsToString = !{JSON.stringify(events)};
-      alert(eventsToString[0].startDate);
+      var leles = new Date(eventsToString[0].startDate);
+      alert(leles.getHours());
       for (var i = 0; i < arr.length; i++) {
-        arr2.push({start: eventsToString[i].startDate, end: eventsToString[i].endDate, group: arr[i].content, className:"lele", content:"Argentina" + i, id:i});
+        arr2.push({start: eventsToString[i].startDate, 
+                   end: eventsToString[i].endDate, 
+                   group: eventsToString[i].carName, 
+                   className:"lele", 
+                   content:"Argentina" + i, 
+                   id:eventsToString[i]._id});
       }
       
       var datas2 = new vis.DataSet(arr2);

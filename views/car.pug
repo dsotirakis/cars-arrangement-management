@@ -17,4 +17,5 @@ html
         each category in categories
           option(value=category.categoryName) #{category.categoryName}
       input(class='categ', type='text', name='carName', placeholder='Enter car name', required='', autocomplete="off")
+      input(class='categ', type='number', name='weight', placeholder='Enter car priority', required='', autocomplete="off")
       input(type='submit', value='Add Car')

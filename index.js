@@ -30,19 +30,24 @@ var Category = mongoose.model("Category", categorySchema);
 
 var carSchema = new mongoose.Schema({
     carName: String,
-    categoryName: String
+    categoryName: String,
+    weight: {type: Number, min: 1}
 });
 
 var Car = mongoose.model("Car", carSchema);
 // Define index page
 app.get("/", (req, res) => {
     res.render("index");
+    var users = getUsers();
+    console.log("lelos");
+    console.log(users.length);
 });
 
 var eventSchema = new mongoose.Schema({
 	startDate : Date,
 	endDate : Date,
-	categoryName : String
+	categoryName : String,
+	carName: String
 });
 
 var Event = mongoose.model("Event", eventSchema);
@@ -52,6 +57,16 @@ app.get("/", (req, res) => {
 	res.render("index", {users:docs});
 	});
 });
+
+
+function getUsers(){
+	User.find({}, function(err, users) {
+  		if (err) throw err;
+		
+  		// object of all the users
+  		return users;
+	});
+};
 
 // Define category page
 app.get("/category", (req, res) => {
@@ -120,7 +135,47 @@ app.post("/addEvent", (req, res) => {
 	.catch(err => {
 		res.status(400).send("Unable to save to database");
 	});
+	
+	Event.find({categoryName:req.body.categoryName}, function(err, events) {
+  		if (err) throw err;
+
+		Car.find({categoryName:req.body.categoryName}, function(err, cars) {
+  			if (err) throw err;
+
+			for (var i = 0; i < events.length; i++){
+				var startDate_toDate = new Date(events[i].startDate);
+				var endDate_toDate = new Date(events[i].endDate);
+				startDate_toDate = startDate_toDate.getDay();
+				console.log(startDate_toDate);
+				Event.update({ _id: events[i].id}, { $set: { carName: cars[i].carName }}, function(err, res) {
+				if (err) {
+					console.log("Something went wrong!");
+				}
+				});
+			}
+
+  		// object of all the users
+  			console.log(cars);
+		});
+	});
+	redirectFunction(app, req.body.categoryName);
+	res.redirect(301, '/groups' + req.body.categoryName);
 });
+
+// This function is used in order to redirect in the specific car category groups page.
+function redirectFunction(app, catName) {
+	app.get('/groups' + catName, function(req, res){
+		mongoose.model("Car").find({categoryName: catName}, function(err, cars) {
+			mongoose.model("Event").find(function (err, events) {
+   				res.render('view', {
+	   				cars : cars,
+	   				events : events
+				});
+   			});
+		});
+	});
+};
+
 
 app.get('/test', function(req, res){
 	mongoose.model("Category").find(function(err, categories) {
@@ -132,7 +187,7 @@ app.get('/test', function(req, res){
 
 
 app.get('/groups', function(req, res){
-	mongoose.model("Car").find(function(err, cars) {
+	mongoose.model("Car").find({categoryName: "Sedan"}, function(err, cars) {
 		mongoose.model("Event").find(function (err, events) {
    			res.render('view', {
 	   			cars : cars,
