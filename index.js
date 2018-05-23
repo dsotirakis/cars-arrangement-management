@@ -1,6 +1,7 @@
 var express = require("express");
 var app = express();
 var bodyParser = require('body-parser');
+const TreeMap = require("treemap-js");
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'pug');
@@ -141,13 +142,89 @@ app.post("/addEvent", (req, res) => {
 
 		Car.find({categoryName:req.body.categoryName}, function(err, cars) {
   			if (err) throw err;
+		
+			// Initialize auxiliary variables.
+			var eventsMap = new TreeMap();
+
+			// Fill eventsMap. The map key is the total event duration in minutes,
+			// while the values are the start and stop seconds as a unix timestamp.
+			for (var i = 0; i < events.length; i++){
+				
+				// Initialize auxiliary variables.
+				var criticalSeconds = [];
+				var startDate_toDate = new Date(events[i].startDate);
+				var endDate_toDate = new Date(events[i].endDate);
+				
+				// Fill critical seconds array.
+				var criticalSeconds = [startDate_toDate.getTime() / 1000,
+									   endDate_toDate.getTime() / 1000];
+
+				// Calculate the total duration of the event.
+				var totalTime = (endDate_toDate.getTime() - startDate_toDate.getTime()) / (3600*1000);
+				
+				// Fill the events map.
+				eventsMap.set(totalTime, criticalSeconds);
+
+			}
+
+			// Initialize booked cars map.
+			var bookedCarsMap = new TreeMap();
+			var bookedCarsMapToAdd = new TreeMap();
+
+			// For each element of the events map.
+			eventsMap.each(function (value, key) {
+
+				if (bookedCarsMap.length > 0){
+						
+					bookedCarsMap.each(function (value1, key1) {
+							
+						for (var i = 0; i < cars.length; i++){
+
+							if (cars[i].carName == key1){
+								if (((value[0] >= value1[0]) && (value[0] <= value1[1])) || 
+									((value[1] >= value1[0]) && (value[1] <= value1[1]))){
+									continue;
+								}
+								else{
+									bookedCarsMapToAdd.set(cars[i].carName, value);
+									break;
+								}
+							}
+							else{
+								bookedCarsMapToAdd.set(cars[i].carName, value);
+								break;
+							}
+									
+						
+						}
+
+					});
+					
+				}
+				else{
+					bookedCarsMap.set(cars[0].carName, value);
+				}
+			});
+
+			bookedCarsMapToAdd.each(function (value, key) {
+				//bookedCarsMap.set(
+			}
 
 			for (var i = 0; i < events.length; i++){
 				var startDate_toDate = new Date(events[i].startDate);
 				var endDate_toDate = new Date(events[i].endDate);
-				startDate_toDate = startDate_toDate.getDay();
-				console.log(startDate_toDate);
-				Event.update({ _id: events[i].id}, { $set: { carName: cars[i].carName }}, function(err, res) {
+				
+				var period = endDate_toDate.getDay() - startDate_toDate.getDay();
+				var minPeriod = 100000, minIndex = -1;
+				for (var j = 0; j < cars.length; j++){
+					if (minPeriod > period * cars[j].weight){
+						minIndex = j;
+						minPeriod = period * cars[j].weight;
+					}
+				}
+				console.log(startDate_toDate.getTime());
+				console.log(endDate_toDate.getTime());
+				Event.update({ _id: events[i].id}, { $set: { carName: cars[minIndex].carName }}, function(err, res) {
 				if (err) {
 					console.log("Something went wrong!");
 				}
