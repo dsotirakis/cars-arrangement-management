@@ -9,10 +9,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "array-sort": "^1.0.0",
     "body-parser": "^1.18.2",
     "express": "^4.16.3",
     "mongoose": "^5.0.17",
+    "multimap": "^1.0.2",
     "pug": "^2.0.3",
+    "sort-desc": "^0.2.0",
+    "sort-map": "^1.0.0",
     "treemap-js": "^1.2.1",
     "vis": "^4.21.0"
   }

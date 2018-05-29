@@ -2,6 +2,9 @@ var express = require("express");
 var app = express();
 var bodyParser = require('body-parser');
 const TreeMap = require("treemap-js");
+const MultiMap = require('multimap');
+const sortMap = require('sort-map');
+const arraySort = require('array-sort');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'pug');
@@ -130,113 +133,148 @@ app.post("/addCar", (req, res) => {
 
 app.post("/addEvent", (req, res) => {
 	var myData = new Event(req.body);
-	myData.save().then(item => {
-		res.send("Event saved to database!");
-	})
-	.catch(err => {
-		res.status(400).send("Unable to save to database");
-	});
-	
-	Event.find({categoryName:req.body.categoryName}, function(err, events) {
-  		if (err) throw err;
+	var start = new Date(myData.startDate);
+	start = start.getTime() / 1000;
+	var stop = new Date(myData.endDate);
+	stop = stop.getTime() / 1000;
+	if (start != stop){
+		myData.save().then(item => {
+			
+			Event.find({categoryName:req.body.categoryName}, function(err, events) {
+		  		if (err) throw err;
 
-		Car.find({categoryName:req.body.categoryName}, function(err, cars) {
-  			if (err) throw err;
-		
-			// Initialize auxiliary variables.
-			var eventsMap = new TreeMap();
+				Car.find({categoryName:req.body.categoryName}, function(err, cars) {
+		  			if (err) throw err;
+					
 
-			// Fill eventsMap. The map key is the total event duration in minutes,
-			// while the values are the start and stop seconds as a unix timestamp.
-			for (var i = 0; i < events.length; i++){
-				
-				// Initialize auxiliary variables.
-				var criticalSeconds = [];
-				var startDate_toDate = new Date(events[i].startDate);
-				var endDate_toDate = new Date(events[i].endDate);
-				
-				// Fill critical seconds array.
-				var criticalSeconds = [startDate_toDate.getTime() / 1000,
-									   endDate_toDate.getTime() / 1000];
-
-				// Calculate the total duration of the event.
-				var totalTime = (endDate_toDate.getTime() - startDate_toDate.getTime()) / (3600*1000);
-				
-				// Fill the events map.
-				eventsMap.set(totalTime, criticalSeconds);
-
-			}
-
-			// Initialize booked cars map.
-			var bookedCarsMap = new TreeMap();
-			var bookedCarsMapToAdd = new TreeMap();
-
-			// For each element of the events map.
-			eventsMap.each(function (value, key) {
-
-				if (bookedCarsMap.length > 0){
+					console.log("events length: " + events.length);
+					// Initialize auxiliary variables.
+					var eventsArr = [];
+					// Fill eventsMap. The map key is the total event duration in minutes,
+					// while the values are the start and stop seconds as a unix timestamp.
+					for (var i = 0; i < events.length; i++){
 						
-					bookedCarsMap.each(function (value1, key1) {
-							
-						for (var i = 0; i < cars.length; i++){
+						// Initialize auxiliary variables.
+						var criticalSeconds = [];
+						var startDate_toDate = new Date(events[i].startDate);
+						var endDate_toDate = new Date(events[i].endDate);
+						
+						// Fill critical seconds array.
+						var criticalSeconds = [startDate_toDate.getTime() / 1000,
+											   endDate_toDate.getTime() / 1000];
 
-							if (cars[i].carName == key1){
-								if (((value[0] >= value1[0]) && (value[0] <= value1[1])) || 
-									((value[1] >= value1[0]) && (value[1] <= value1[1]))){
-									continue;
+						// Calculate the total duration of the event.
+						var totalTime = (endDate_toDate.getTime() - startDate_toDate.getTime()) / (3600*1000);
+						
+						// Fill the events map.
+						eventsArr.push({eventId: events[i].id, totalTime: totalTime, criticalSeconds: criticalSeconds});
+					}
+
+					arraySort(eventsArr, 'totalTime', {reverse: true});
+					// Sort the multimap, based on the event's total time.
+					var maxDuration     = -1;
+					var count		    =  0;
+					var index 		    = -1;
+					var durationsToSort = [];
+					var breakFlag 		= false;
+
+					for (var i = 0; i < durationsToSort.length; i++){
+						console.log(eventsArr[i].totalTime);
+					}
+
+					var bookedCarsArr = [];
+					var bookedCarsArrToAdd = [];
+			
+					for (var i = 0; i < eventsArr.length; i++){
+						if (bookedCarsArr.length > 0){
+
+							bookedCarsArrToAdd = [];
+							
+								for (var k = 0; k < cars.length; k++) {
+
+									var tempBookedArr = bookedCarsArr.filter(function (element){
+										return element.carName == cars[k].carName;
+									});
+
+									if (tempBookedArr.length == 0){
+										bookedCarsArrToAdd.push({eventId: eventsArr[i].eventId, carName: cars[k].carName, criticalSeconds: eventsArr[i].criticalSeconds});
+										break;
+									}
+									
+									var toAdd = false;
+									var overlapFlag = false;
+									for (var j = 0; j < tempBookedArr.length; j++){
+										if (cars[k].carName == tempBookedArr[j].carName) {
+											if (((eventsArr[i].criticalSeconds[0] >= tempBookedArr[j].criticalSeconds[0]) && (eventsArr[i].criticalSeconds[0] <= tempBookedArr[j].criticalSeconds[1])) ||
+										    	((eventsArr[i].criticalSeconds[1] >= tempBookedArr[j].criticalSeconds[0]) && (eventsArr[i].criticalSeconds[1] <= tempBookedArr[j].criticalSeconds[1]))){
+										    	overlapFlag = true;
+										    	console.log("overlapping: " + i + " " + k);
+										    	
+										    	continue;
+											}
+											else{
+												if (!toAdd){
+													console.log("not: " + i + " " + k);
+													var tempBookedElement = [];
+													tempBookedElement.push({eventId: eventsArr[i].eventId, carName: cars[k].carName, criticalSeconds: eventsArr[i].criticalSeconds});
+													
+													console.log(tempBookedElement);
+													toAdd = true;
+												}
+											}
+										}
+									
+									}
+									
+									if (toAdd && !overlapFlag){
+										bookedCarsArrToAdd = bookedCarsArrToAdd.concat(tempBookedElement);
+										breakFlag = true;
+										console.log(bookedCarsArr);
+									}
+									else
+										continue;
+
+									if (breakFlag){
+										breakFlag = false;
+										break;
+									}
+										
 								}
-								else{
-									bookedCarsMapToAdd.set(cars[i].carName, value);
+
+								if (bookedCarsArrToAdd.length == 0){
+									console.log("Not availiable date!");
 									break;
 								}
-							}
-							else{
-								bookedCarsMapToAdd.set(cars[i].carName, value);
-								break;
-							}
-									
-						
+								console.log("pwsGinetai");
+								bookedCarsArr = bookedCarsArr.concat(bookedCarsArrToAdd);
 						}
+						else{
+							bookedCarsArr.push({eventId: eventsArr[i].eventId, carName: cars[0].carName, criticalSeconds: eventsArr[i].criticalSeconds});
+						}
+					}
 
-					});
-					
-				}
-				else{
-					bookedCarsMap.set(cars[0].carName, value);
-				}
+					for (var i = 0; i < bookedCarsArr.length; i++){
+						Event.update({ _id: bookedCarsArr[i].eventId}, { $set: { carName: bookedCarsArr[i].carName }}, function(err, res) {
+							if (err) {
+								console.log("Something went wrong!");
+							}
+						});
+					}
+				});
 			});
 
-			bookedCarsMapToAdd.each(function (value, key) {
-				//bookedCarsMap.set(
-			}
+			redirectFunction(app, req.body.categoryName);
+			res.redirect(301, '/groups' + req.body.categoryName);
+			res.send("Event saved to database!");
 
-			for (var i = 0; i < events.length; i++){
-				var startDate_toDate = new Date(events[i].startDate);
-				var endDate_toDate = new Date(events[i].endDate);
-				
-				var period = endDate_toDate.getDay() - startDate_toDate.getDay();
-				var minPeriod = 100000, minIndex = -1;
-				for (var j = 0; j < cars.length; j++){
-					if (minPeriod > period * cars[j].weight){
-						minIndex = j;
-						minPeriod = period * cars[j].weight;
-					}
-				}
-				console.log(startDate_toDate.getTime());
-				console.log(endDate_toDate.getTime());
-				Event.update({ _id: events[i].id}, { $set: { carName: cars[minIndex].carName }}, function(err, res) {
-				if (err) {
-					console.log("Something went wrong!");
-				}
-				});
-			}
-
-  		// object of all the users
-  			console.log(cars);
-		});
-	});
-	redirectFunction(app, req.body.categoryName);
-	res.redirect(301, '/groups' + req.body.categoryName);
+			})
+			.catch(err => {
+				res.status(400).send("Unable to save to database");
+			});
+	}
+	else{
+		return res.status(400).send("You provided same date-time values. Please repeat the procedure.");
+	}
 });
 
 // This function is used in order to redirect in the specific car category groups page.
@@ -253,6 +291,11 @@ function redirectFunction(app, catName) {
 	});
 };
 
+
+Event.find({}, function(err, events) {
+  	if (err) throw err;
+  	console.log("len: " + events.length);
+});
 
 app.get('/test', function(req, res){
 	mongoose.model("Category").find(function(err, categories) {
