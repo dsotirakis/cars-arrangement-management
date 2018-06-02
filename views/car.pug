@@ -1,21 +1,29 @@
 doctype html
 html
   head
-    title Add car
+    title Add / Delete Cars
   body
-    h1 Add Car
-    if cars
-      each car in cars
-        li #{car.carName}
-        li #{car.categoryName}
-    script.
-      
-    form(method='post', action='/addCar')
-      label Car
+    h1 Add / Delete Car
       br
-      select(id = "categ", name="categoryName")
-        each category in categories
-          option(value=category.categoryName) #{category.categoryName}
-      input(class='categ', type='text', name='carName', placeholder='Enter car name', required='', autocomplete="off")
-      input(class='categ', type='number', name='weight', placeholder='Enter car priority', required='', autocomplete="off")
-      input(type='submit', value='Add Car')
+
+      if cars.length > 0
+        h2 Delete Car
+        form(method = 'post', action = '/deleteCar')
+          select(id = "carDel", name = "carName", size = cars.length)
+            each car in cars
+              option(value={'carName':car.carName, 'categoryName':car.categoryName}) #{car.carName}
+          br
+          input(type= "submit", class = "carDel", value = "Delete Car")
+
+        br
+      br
+
+      h2 Add Car
+        form(method='post', action='/addCar')
+          br
+          select(id = "categ", name="categoryName")
+            each category in categories
+              option(value=category.categoryName) #{category.categoryName}
+          input(class='categ', type='text', name='carName', placeholder='Enter car name', required='', autocomplete="off")
+          input(type='submit', value='Add Car')
+

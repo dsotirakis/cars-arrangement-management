@@ -9,3 +9,16 @@ html
       br
       input(type='text', name='categoryName', placeholder='Enter category name', required='')
       input(type='submit', value='Add Category')
+
+
+  if categories.length > 0
+  h2 Delete Car
+    form(method = 'post', action = '/deleteCategory')
+      select(id = "catDel", name = "categoryName", size = categories.length)
+        each category in categories
+          option(value=category.categoryName) #{category.categoryName}
+      br
+      input(type= "submit", class = "catDel", value = "Delete Category")
+
+    br
+  br

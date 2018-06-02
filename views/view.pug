@@ -41,29 +41,6 @@ html
       var datas = new vis.DataSet(arr);
       
       // http://motocal.com/
-      var groups = new vis.DataSet([
-      {"content": carsToString[1].firstName, "id": carsToString[1].firstName, "value": 1, className:'openwheel'},
-      {"content": "lelos", "id": "lelos", "value": 2, className:'rally'},
-      {"content": "MotoGP", "id": "MotoGP", "value": 3, className:'motorcycle'},
-      {"content": "V8SC", "id": "V8SC", "value": 4, className:'touringcars'},
-      {"content": "WTCC", "id": "WTCC", "value": 5, className:'touringcars'},
-      {"content": "F1", "id": "F1", "value": 6, className:'openwheel'},
-      {"content": "SBK", "id": "SBK", "value": 7, className:'motorcycle'},
-      {"content": "IndyCar", "id": "IndyCar", "value": 8, className:'openwheel'},
-      {"content": "MotoAmerica", "id": "MotoAmerica", "value": 9, className:'motorcycle'},
-      {"content": "SGP", "id": "SGP", "value": 10, className:'rally'},
-      {"content": "EWC", "id": "EWC", "value": 11, className:'endurance'},
-      {"content": "BSB", "id": "BSB", "value": 12, className:'motorcycle'},
-      {"content": "DTM", "id": "DTM", "value": 13, className:'touringcars'},
-      {"content": "BTCC", "id": "BTCC", "value": 14, className:'touringcars'},
-      {"content": "WorldRX", "id": "WorldRX", "value": 15, className:'rally'},
-      {"content": "WSR", "id": "WSR", "value": 16, className:'openwheel'},
-      {"content": "Roads", "id": "Roads", "value": 17, className:'motorcycle'},
-      {"content": "WEC", "id": "WEC", "value": 18, className:'endurance'},
-      {"content": "GP2", "id": "GP2", "value": 19, className:'openwheel'}
-      ]);
-
-      alert(JSON.stringify(groups));
       alert(JSON.stringify(datas));
 
       // function to make all groups visible again
@@ -81,8 +58,8 @@ html
         arr2.push({start: eventsToString[i].startDate, 
                    end: eventsToString[i].endDate, 
                    group: eventsToString[i].carName, 
-                   className:"lele", 
-                   content:"Argentina" + i, 
+                   className:eventsToString[i].carName, 
+                   content: eventsToString[i].startDate + " - " +  eventsToString[i].endDate, 
                    id:eventsToString[i]._id});
       }
 
@@ -350,8 +327,8 @@ html
       orientation: 'both',
       editable: true,
       groupEditable: true,
-      start: new Date(2015, 6, 1),
-      end: new Date(2015, 10, 1)
+      start: new Date(2017, 12, 1),
+      end: new Date(2018, 10, 1)
       };
       var timeline = new vis.Timeline(container);
       timeline.setOptions(options);
