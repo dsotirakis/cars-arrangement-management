@@ -1,13 +1,13 @@
 doctype html
 html
   head
-    title Add / Delete Cars
+    title Choose Category
   body
-    h1 Add / Delete Car
+    h1 Choose Timeline
       br
 
       if categories.length > 0
-        h2 Delete Car
+        h2 Choose Timeline
         form(method = 'post', action = '/groups')
           select(id = "category", name = "categoryName", size = categories.length)
             each category in categories

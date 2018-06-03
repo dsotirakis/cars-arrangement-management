@@ -6,6 +6,17 @@ html
     h1 Add / Delete Car
       br
 
+      h2 Add Car
+        form(method='post', action='/addCar')
+          br
+          select(id = "categ", name="categoryName")
+            each category in categories
+              option(value=category.categoryName) #{category.categoryName}
+          input(class='categ', type='text', name='carName', placeholder='Enter car name', required='', autocomplete="off")
+          input(type="hidden", name='weight', value = 0)
+          input(type='submit', value='Add Car')
+        br
+     
       if cars.length > 0
         h2 Delete Car
         form(method = 'post', action = '/deleteCar')
@@ -18,23 +29,14 @@ html
         br
       br
 
-      h2 Add Car
-        form(method='post', action='/addCar')
+      if cars.length > 0
+        h2 Update Car Priority
+        form(method = 'post', action = '/updateCar')
           br
-          select(id = "categ", name="categoryName")
-            each category in categories
-              option(value=category.categoryName) #{category.categoryName}
-          input(class='categ', type='text', name='carName', placeholder='Enter car name', required='', autocomplete="off")
-          input(type="hidden", name='weight', value = 0)
-          input(type='submit', value='Add Car')
-
-      h2 Update Car Priority
-      form(method = 'post', action = '/updateCar')
-        br
-        each car in cars
-          td #{car.carName + " - Priority Value: " + car.weight + " --> "}
-          input(class = "categ", type = 'text',  name = 'weight', value = car.weight)
-          input(type = "hidden", value = {'carName' : car.carName,'categoryName' : car.categoryName}, name = 'new')
-          br
-          br
-        input(type = 'submit', value = 'Update Values')
+          each car in cars
+            td #{car.carName + " - Priority Value: " + car.weight + " --> "}
+            input(class = "categ", type = 'text',  name = 'weight', value = car.weight)
+            input(type = "hidden", value = {'carName' : car.carName,'categoryName' : car.categoryName}, name = 'new')
+            br
+            br
+          input(type = 'submit', value = 'Update Values')

@@ -12,7 +12,7 @@ html
 
 
   if categories.length > 0
-  h2 Delete Car
+  h2 Delete Category
     form(method = 'post', action = '/deleteCategory')
       select(id = "catDel", name = "categoryName", size = categories.length)
         each category in categories

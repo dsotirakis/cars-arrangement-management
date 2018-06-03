@@ -21,8 +21,7 @@ html
     link(href='vis/dist/vis-timeline-graph2d.min.css', rel='stylesheet', type='text/css')
   body
     p
-      | This example demonstrates editable groups (reordering and hiding).
-      button(onclick='showAllGroups()') Restore Hidden
+      | This timeline displays the total booked cars. Every rectangle represents the start and stop date of the event.
 
       if cars
         each car in cars
