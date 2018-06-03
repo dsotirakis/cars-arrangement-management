@@ -110,6 +110,10 @@ app.get("/car", (req, res) => {
 });
 
 app.get("/event", (req, res) => {
+	var today = new Date();
+	var ran = new Date (2018,5,5);
+	if (today < ran)
+		console.log("today" + today);
 	mongoose.model("Event").find(function(err, events) {
 		mongoose.model("Category").find(function (err, categories) {
    			res.render('event', {
@@ -143,6 +147,7 @@ app.post("/updateCar", (req, res) => {
 	console.log("body:: " + req.body.weight);
 	console.log("lelos: " + req.body.new.length);
 	var temp = [];
+	var today = new Date();
 	for (var i = 0; i < req.body.new.length; i++)
 		temp.push(JSON.parse(req.body.new[i]));
 
@@ -174,7 +179,7 @@ app.post("/updateCar", (req, res) => {
 				// Fill eventsMap. The map key is the total event duration in minutes,
 				// while the values are the start and stop seconds as a unix timestamp.
 				for (var i = 0; i < events.length; i++){
-						
+					console.log("real: " + events[i].startDate);	
 					// Initialize auxiliary variables.
 					var criticalSeconds = [];
 					var startDate_toDate = new Date(events[i].startDate);
@@ -188,7 +193,8 @@ app.post("/updateCar", (req, res) => {
 					var totalTime = (endDate_toDate.getTime() - startDate_toDate.getTime()) / (3600*1000);
 					
 					// Fill the events map.
-					eventsArr.push({eventId: events[i].id, totalTime: totalTime, criticalSeconds: criticalSeconds});
+					if (today < startDate_toDate)
+						eventsArr.push({eventId: events[i].id, totalTime: totalTime, criticalSeconds: criticalSeconds});
 				}
 				
 				arraySort(eventsArr, 'totalTime', {reverse: true});
@@ -298,6 +304,7 @@ app.post("/addCategory", (req, res) => {
 
 app.post("/addCar", (req, res) => {
 	var myData = new Car(req.body);
+	var today  = new Date();
 	myData.save().then(item => {
 
 			Event.find({categoryName:req.body.categoryName}, function(err, events) {
@@ -328,6 +335,7 @@ app.post("/addCar", (req, res) => {
 						var totalTime = (endDate_toDate.getTime() - startDate_toDate.getTime()) / (3600*1000);
 						
 						// Fill the events map.
+					if (today < startDate_toDate)
 						eventsArr.push({eventId: events[i].id, totalTime: totalTime, criticalSeconds: criticalSeconds});
 					}
 
@@ -435,7 +443,7 @@ app.post("/addCar", (req, res) => {
 app.post("/deleteEvent", (req, res) => {
 
 	console.log(req.body.event);
-
+	var today = new Date();
 	var temp = JSON.parse(req.body.event);
 	Event.remove({ _id : temp.id }).then(item => {
 		
@@ -465,6 +473,7 @@ app.post("/deleteEvent", (req, res) => {
 						var totalTime = (endDate_toDate.getTime() - startDate_toDate.getTime()) / (3600*1000);
 						
 						// Fill the events map.
+					if (today < startDate_toDate)
 						eventsArr.push({eventId: events[i].id, totalTime: totalTime, criticalSeconds: criticalSeconds});
 					}
 					for (var i = 0; i < events.length; i ++){
@@ -625,6 +634,7 @@ app.post("/deleteCar", (req, res) => {
 						var totalTime = (endDate_toDate.getTime() - startDate_toDate.getTime()) / (3600*1000);
 						
 						// Fill the events map.
+					if (today < startDate_toDate)
 						eventsArr.push({eventId: events[i].id, totalTime: totalTime, criticalSeconds: criticalSeconds});
 					}
 
@@ -734,29 +744,29 @@ app.post("/deleteCar", (req, res) => {
 function filterEvents(eventData, categoryName) {
 
 	var start = new Date(eventData.startDate);
-	var stop  = new Date(eventData.endDate);
-	var bool  = false;	
+	var stop  = new Date(eventData.endDate);	
+	var today = new Date();
+
+
+	if (today > stop || today > start){
+		var string = "You can't provide dates before the current date-time. Please provide valid dates.";
+		return string;
+	}
 	start = start.getTime() / 1000;
 	stop = stop.getTime() / 1000;
 	console.log(start + " " + stop);
 
 	if (start == stop){
-		var string = "Start and Stop date are the same, please change"
+		var string = "Start and Stop date are the same, please change";
 		return string;
 	}
 
 	if (start > stop){
-		var string = "Start date is greater than the stop date. Repeat the procedure."
+		var string = "Start date is greater than the stop date. Repeat the procedure.";
 		return string;
 	}
-	
-	var string;
-	getMessage(start, stop, categoryName).then((message) => {
-		console.log(message);
-		string = message;
-	});
 
-	console.log("index: " + string);
+	
 
 	return "";
 }
@@ -802,9 +812,11 @@ function getMessage(start, stop, categoryName) {
 	
 				if (carCount == cars.length){
 					console.log("lelos");
-					resolve("Unavaliable dates. All cars are booked.");
+					return resolve("Unavaliable dates. All cars are booked.");
 					bool = true;
 				}
+				else
+					return resolve("");
 			});
 
 		});
@@ -814,9 +826,17 @@ function getMessage(start, stop, categoryName) {
 app.post("/addEvent", (req, res) => {
 
 	var myData = new Event(req.body);
-	var message = filterEvents(myData, req.body.categoryName);
-	console.log(message);
-	if (message === ""){
+	
+	
+	var start = new Date(myData.startDate);
+	var stop  = new Date(myData.endDate);	
+	var today = new Date();
+	start = start.getTime() / 1000;
+	stop = stop.getTime() / 1000;
+	var message1 = filterEvents(myData, req.body.categoryName);
+	console.log(message1);
+	getMessage(start, stop, req.body.categoryName).then(message2 => {
+	if (message1 === "" && message2 === ""){
 		myData.save().then(item => {
 			
 			Event.find({categoryName:req.body.categoryName}, function(err, events) {
@@ -844,6 +864,7 @@ app.post("/addEvent", (req, res) => {
 						var totalTime = (endDate_toDate.getTime() - startDate_toDate.getTime()) / (3600*1000);
 						
 						// Fill the events map.
+					if (today < startDate_toDate)
 						eventsArr.push({eventId: events[i].id, totalTime: totalTime, criticalSeconds: criticalSeconds});
 					}
 
@@ -948,10 +969,11 @@ app.post("/addEvent", (req, res) => {
 			});
 	}
 	else{
-		return res.status(400).send(message);
+		res.status(400).send("Reasons: " + message1 + " - " +message2);
 	}
 });
 
+});
 // This function is used in order to redirect in the specific car category groups page.
 function redirectFunction(app, catName) {
 	app.get('/groups' + catName, function(req, res){
