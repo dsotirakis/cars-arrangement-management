@@ -18,7 +18,7 @@ app.use(express.static("node_modules"));
 var mongoose = require("mongoose");
 mongoose.Promise = global.Promise;
 mongoose.connect("mongodb://localhost:27017/node-demo2");
-autoIncrement.initialize(mongoose.createConnection("mongodb://localhost:27017/node-demo2"));
+//autoIncrement.initialize(mongoose.createConnection("mongodb://localhost:27017/node-demo2"));
 
 // Define User Model
 var nameSchema = new mongoose.Schema({
@@ -38,9 +38,10 @@ var Category = mongoose.model("Category", categorySchema);
 var carSchema = new mongoose.Schema({
     carName: String,
     categoryName: String,
+    weight: Number
 });
 
-carSchema.plugin(autoIncrement.plugin, {model: 'Car', field: 'weight'});
+//carSchema.plugin(autoIncrement.plugin, {model: 'Car', field: 'weight'});
 
 
 function removeLinkedDocuments(doc) {
@@ -63,6 +64,14 @@ var eventSchema = new mongoose.Schema({
 });
 
 var Event = mongoose.model("Event", eventSchema);
+
+app.get("/home", (req, res) => {
+	mongoose.model("Category").find(function(err, categories) {
+		res,render('home', {
+			categories: categories,
+		});
+	});
+});
 
 app.get("/", (req, res) => {
 	db.users.find({}, function(err, docs){
@@ -130,6 +139,153 @@ app.post("/addname", (req, res) => {
         });
 });
 
+app.post("/updateCar", (req, res) => {
+	console.log("body:: " + req.body.weight);
+	console.log("lelos: " + req.body.new.length);
+	var temp = [];
+	for (var i = 0; i < req.body.new.length; i++)
+		temp.push(JSON.parse(req.body.new[i]));
+
+	for (var i = 0; i < temp.length; i++)
+		console.log("sa;a: " + temp[i].categoryName);
+	
+      // After succ
+	for (var i = 0; i < req.body.weight.length; i++){
+
+		console.log(temp[i].carName + " '' " + req.body.weight[i]);
+		
+		Car.update( {"carName" : temp[i].carName}, {"weight":req.body.weight[i]}).then(item => {
+			console.log("Done");
+		});
+	}
+
+
+	Event.find({categoryName:temp[0].categoryName}, function(err, events) {
+		if (err) throw err;
+
+		Car.find({categoryName:temp[0].categoryName}, null, {sort:{'weight':1}}, function(err, cars) {
+		  	if (err) throw err;
+
+		  	for (var i = 0; i < cars.length; i++)
+		  		console.log("car: " + cars[i].carName + " " + cars[i].weight);
+					
+				// Initialize auxiliary variables.
+				var eventsArr = [];
+				// Fill eventsMap. The map key is the total event duration in minutes,
+				// while the values are the start and stop seconds as a unix timestamp.
+				for (var i = 0; i < events.length; i++){
+						
+					// Initialize auxiliary variables.
+					var criticalSeconds = [];
+					var startDate_toDate = new Date(events[i].startDate);
+					var endDate_toDate = new Date(events[i].endDate);
+						
+					// Fill critical seconds array.
+					var criticalSeconds = [startDate_toDate.getTime() / 1000,
+						endDate_toDate.getTime() / 1000];
+
+					// Calculate the total duration of the event.
+					var totalTime = (endDate_toDate.getTime() - startDate_toDate.getTime()) / (3600*1000);
+					
+					// Fill the events map.
+					eventsArr.push({eventId: events[i].id, totalTime: totalTime, criticalSeconds: criticalSeconds});
+				}
+				
+				arraySort(eventsArr, 'totalTime', {reverse: true});
+				// Sort the multimap, based on the event's total time.
+				var maxDuration     = -1;
+				var count		    =  0;
+				var index 		    = -1;
+				var durationsToSort = [];
+				var breakFlag 		= false;
+
+				for (var i = 0; i < durationsToSort.length; i++){
+					console.log(eventsArr[i].totalTime);
+				}
+
+				var bookedCarsArr = [];
+				var bookedCarsArrToAdd = [];
+			
+				for (var i = 0; i < eventsArr.length; i++){
+					if (bookedCarsArr.length > 0){
+
+						bookedCarsArrToAdd = [];
+							
+							for (var k = 0; k < cars.length; k++) {
+
+								var tempBookedArr = bookedCarsArr.filter(function (element){
+									return element.carName == cars[k].carName;
+								});
+
+								if (tempBookedArr.length == 0){
+									bookedCarsArrToAdd.push({eventId: eventsArr[i].eventId, carName: cars[k].carName, criticalSeconds: eventsArr[i].criticalSeconds});
+									break;
+								}
+									
+								var toAdd = false;
+								var overlapFlag = false;
+								for (var j = 0; j < tempBookedArr.length; j++){
+									if (cars[k].carName == tempBookedArr[j].carName) {
+										if (((eventsArr[i].criticalSeconds[0] >= tempBookedArr[j].criticalSeconds[0]) && (eventsArr[i].criticalSeconds[0] <= tempBookedArr[j].criticalSeconds[1])) ||
+									    	((eventsArr[i].criticalSeconds[1] >= tempBookedArr[j].criticalSeconds[0]) && (eventsArr[i].criticalSeconds[1] <= tempBookedArr[j].criticalSeconds[1]))){
+									    	overlapFlag = true;
+										    console.log("overlapping: " + i + " " + k);
+										    	
+											continue;
+										}
+										else{
+											if (!toAdd){
+												console.log("not: " + i + " " + k);
+												var tempBookedElement = [];
+												tempBookedElement.push({eventId: eventsArr[i].eventId, carName: cars[k].carName, criticalSeconds: eventsArr[i].criticalSeconds});
+												toAdd = true;
+											}
+										}
+									}
+									
+								}
+									
+								if (toAdd && !overlapFlag){
+									bookedCarsArrToAdd = bookedCarsArrToAdd.concat(tempBookedElement);
+									breakFlag = true;
+									console.log(bookedCarsArr);
+								}
+								else
+									continue;
+
+								if (breakFlag){
+									breakFlag = false;
+									break;
+								}
+										
+							}
+
+							if (bookedCarsArrToAdd.length == 0){
+								console.log("Not availiable date!");
+								break;
+							}
+							console.log("pwsGinetai");
+							bookedCarsArr = bookedCarsArr.concat(bookedCarsArrToAdd);
+					}
+					else{
+						bookedCarsArr.push({eventId: eventsArr[i].eventId, carName: cars[0].carName, criticalSeconds: eventsArr[i].criticalSeconds});
+					}
+				}
+
+				for (var i = 0; i < bookedCarsArr.length; i++){
+					Event.update({ _id: bookedCarsArr[i].eventId}, { $set: { carName: bookedCarsArr[i].carName }}, function(err, res) {
+						if (err) {
+							console.log("Something went wrong!");
+						}
+					});
+				}
+			});
+		});
+
+		res.redirect(301, '/car');
+		res.send("Event saved to database!");
+});
+
 app.post("/addCategory", (req, res) => {
 	var myData = new Category(req.body);
 	myData.save().then(item => {
@@ -147,8 +303,11 @@ app.post("/addCar", (req, res) => {
 			Event.find({categoryName:req.body.categoryName}, function(err, events) {
 		  		if (err) throw err;
 
-				Car.find({categoryName:req.body.categoryName}, function(err, cars) {
+				Car.find({categoryName:req.body.categoryName}, null, {sort:{'weight':1}}, function(err, cars) {
 		  			if (err) throw err;
+
+		  			for (var i = 0; i < cars.length; i++)
+		  				console.log("car: " + cars[i].carName + " " + cars[i].weight);
 					
 					// Initialize auxiliary variables.
 					var eventsArr = [];
@@ -284,7 +443,7 @@ app.post("/deleteEvent", (req, res) => {
 			Event.find({categoryName:temp.categoryName}, function(err, events) {
 		  		if (err) throw err;
 
-				Car.find({categoryName:temp.categoryName}, function(err, cars) {
+				Car.find({categoryName:temp.categoryName}, null, {sort:{'weight':1}}, function(err, cars) {
 		  			if (err) throw err;
 					
 					// Initialize auxiliary variables.
@@ -444,7 +603,7 @@ app.post("/deleteCar", (req, res) => {
 			Event.find({categoryName:temp.categoryName}, function(err, events) {
 		  		if (err) throw err;
 
-				Car.find({categoryName:temp.categoryName}, function(err, cars) {
+				Car.find({categoryName:temp.categoryName}, null, {sort:{'weight':1}}, function(err, cars) {
 		  			if (err) throw err;
 					
 					// Initialize auxiliary variables.
@@ -591,10 +750,13 @@ function filterEvents(eventData, categoryName) {
 		return string;
 	}
 	
+	var string;
 	getMessage(start, stop, categoryName).then((message) => {
 		console.log(message);
-		var string = message;
+		string = message;
 	});
+
+	console.log("index: " + string);
 
 	return "";
 }
@@ -660,7 +822,7 @@ app.post("/addEvent", (req, res) => {
 			Event.find({categoryName:req.body.categoryName}, function(err, events) {
 		  		if (err) throw err;
 
-				Car.find({categoryName:req.body.categoryName}, function(err, cars) {
+				Car.find({categoryName:req.body.categoryName}, null, {sort:{'weight':1}}, function(err, cars) {
 		  			if (err) throw err;
 					
 					// Initialize auxiliary variables.

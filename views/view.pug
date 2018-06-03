@@ -38,6 +38,8 @@ html
         arr.push({"content": carsToString[i].carName, "id": carsToString[i].carName, "value": (i+1), className: 'lele'});
       }
 
+      arr.sort(function(a,b){return a.weight - b.weight});
+
       var datas = new vis.DataSet(arr);
       
       // http://motocal.com/
