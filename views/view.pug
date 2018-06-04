@@ -19,9 +19,84 @@ html
       .vis-item.endurance  { background-color: #FFFFCC; }
     script(src='vis/dist/vis.js')
     link(href='vis/dist/vis-timeline-graph2d.min.css', rel='stylesheet', type='text/css')
+
+    script(src='/bower_components/jquery/jquery.min.js')
+    script(src='/bower_components/moment/min/moment.min.js')
+    script(src='/bower_components/bootstrap/dist/js/bootstrap.min.js')
+    script(src='/bower_components/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js')
+    link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.min.css')
+    link(rel='stylesheet' href='/bower_components/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css')
   body
     p
       | This timeline displays the total booked cars. Every rectangle represents the start and stop date of the event.
+
+    
+      h2 Add Car
+        form(method='post', action='/addCar')
+          br
+          select(id = "categ", name="categoryName")
+            each category in categories
+              option(value=category.categoryName) #{category.categoryName}
+          input(class='categ', type='text', name='carName', placeholder='Enter Car Number', required='', autocomplete="off")
+          input(class='categ', type='text', name='brand', placeholder='Enter Car Model', required='', autocomplete="off")
+          input(type="hidden", name='weight', value = 0)
+          input(type='submit', value='Add Car')
+        br
+     
+      if cars.length > 0
+        h2 Delete Car
+        td
+        form(method = 'post', action = '/deleteCar')
+          select(id = "carDel", name = "carName", size = cars.length)
+            each car in cars
+              option(value={'carName':car.carName, 'categoryName':car.categoryName}) #{car.carName + " - " + car.brand}
+          br
+          input(type= "submit", class = "carDel", value = "Delete Car")
+
+        br
+      br
+
+      if cars.length > 0
+        h2 Update Car Priority
+        form(method = 'post', action = '/updateCar')
+          br
+          each car in cars
+            td #{car.carName + " - Priority Value: " + car.weight + " --> "}
+            input(class = "categ", type = 'text',  name = 'weight', value = car.weight)
+            input(type = "hidden", value = {'carName' : car.carName,'categoryName' : car.categoryName}, name = 'new')
+            br
+            br
+          input(type = 'submit', value = 'Update Values')
+
+
+      h2 Add Event
+      
+      .container
+        .row
+          .col-sm-6
+            .form-group
+              #datetimepicker.input-group.date
+              input.form-control(type='text')
+              span.input-group-addon
+                span.glyphicon.glyphicon-calendar
+            
+                  
+          script(src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js").
+
+            $(function () {
+              alert(";e;os");          
+              $('#datetimepicker').data("DateTimePicker").date();
+            });
+
+      if events.length > 0
+      h2 Delete Event
+        form(method = 'post', action = '/deleteEvent')
+          select(id = "evDel", name = "event", size = events.length)
+            each event in events    
+              option(value = {'id' : event._id , 'categoryName': event.categoryName}) #{event.startDate + " - " + event.endDate + " - Car: " + event.carName}
+          br
+          input(type= "submit", class = "evDel", value = "Delete Event")
+  
 
       if cars
         each car in cars
@@ -35,7 +110,7 @@ html
       carsToString.sort(function(a,b){return a.weight - b.weight});
       var len = carsToString.length;
       for (var i = 0; i < len; i++) {
-        arr.push({"content": carsToString[i].carName, "id": carsToString[i].carName, "value": (i+1), className: 'lele'});
+        arr.push({"content": i + " - " + carsToString[i].brand + " - " + carsToString[i].carName, "id": carsToString[i].carName, "value": (i+1), className: 'lele'});
       }
 
       var datas = new vis.DataSet(arr);

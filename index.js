@@ -3,10 +3,15 @@ var app = express();
 var bodyParser = require('body-parser');
 var autoIncrement = require('mongoose-auto-increment');
 var stringify = require('json-stringify');
+var yesno = require('yesno');
+import alert from 'alert-node'
 const TreeMap = require("treemap-js");
 const MultiMap = require('multimap');
 const sortMap = require('sort-map');
 const arraySort = require('array-sort');
+const prompt = require('node-ask').prompt;
+const confirm = require('node-ask').confirm;
+const multiline = require('node-ask').multiline;
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'pug');
@@ -38,16 +43,9 @@ var Category = mongoose.model("Category", categorySchema);
 var carSchema = new mongoose.Schema({
     carName: String,
     categoryName: String,
-    weight: Number
+    weight: Number,
+    brand : String,
 });
-
-//carSchema.plugin(autoIncrement.plugin, {model: 'Car', field: 'weight'});
-
-
-function removeLinkedDocuments(doc) {
-    // doc will be the removed Person document
-    Event.remove({carName: { $in: doc.carName }})
-}
 
 var Car = mongoose.model("Car", carSchema);
 // Define index page
@@ -60,7 +58,8 @@ var eventSchema = new mongoose.Schema({
 	startDate : Date,
 	endDate : Date,
 	categoryName : String,
-	carName: String
+	carName: String,
+	person: String
 });
 
 var Event = mongoose.model("Event", eventSchema);
@@ -74,6 +73,7 @@ app.get("/home", (req, res) => {
 });
 
 app.get("/", (req, res) => {
+	alert(";ee;");
 	db.users.find({}, function(err, docs){
 	res.render("index", {users:docs});
 	});
@@ -288,8 +288,9 @@ app.post("/updateCar", (req, res) => {
 			});
 		});
 
-		res.redirect(301, '/car');
-		res.send("Event saved to database!");
+			redirectFunction(app, temp[0].categoryName);
+			res.redirect(301, '/groups' + temp[0].categoryName);
+			res.send("Event saved to database!");
 });
 
 app.post("/addCategory", (req, res) => {
@@ -598,10 +599,10 @@ app.post("/deleteCategory", (req, res) => {
 });
 
 app.post("/deleteCar", (req, res) => {
-
 	
-	carSchema.post('remove', removeLinkedDocuments);
 	var temp = JSON.parse(req.body.carName);
+	var today = new Date();
+	console.log("here: " + temp.categoryName)
 	Car.remove({ carName: temp.carName }).then(item => {
 
 		Event.deleteMany( {"carName" : temp.carName}).then(item => {
@@ -720,6 +721,10 @@ app.post("/deleteCar", (req, res) => {
 					}
 
 					for (var i = 0; i < bookedCarsArr.length; i++){
+						
+					}
+
+					for (var i = 0; i < bookedCarsArr.length; i++){
 						Event.update({ _id: bookedCarsArr[i].eventId}, { $set: { carName: bookedCarsArr[i].carName }}, function(err, res) {
 							if (err) {
 								console.log("Something went wrong!");
@@ -803,17 +808,15 @@ function getMessage(start, stop, categoryName) {
 	
 				var carCount = 0;
 				for (var i = 0; i < eventsArr.length; i ++){
-					if ((start >= eventsArr[i].criticalSeconds[0] && start <= eventsArr[i].criticalSeconds[1]) ||
-				 		(stop >= eventsArr[i].criticalSeconds[0] && stop <= eventsArr[i].criticalSeconds[1])){
+					if ((start >= eventsArr[i].criticalSeconds[0] && start <= (eventsArr[i].criticalSeconds[1] + 10800)) ||
+				 		(stop >= eventsArr[i].criticalSeconds[0] && stop <= (eventsArr[i].criticalSeconds[1]) + 10800)){
 						carCount += 1;
 						console.log("in!");
 					}
 				}
 	
 				if (carCount == cars.length){
-					console.log("lelos");
 					return resolve("Unavaliable dates. All cars are booked.");
-					bool = true;
 				}
 				else
 					return resolve("");
@@ -979,10 +982,13 @@ function redirectFunction(app, catName) {
 	app.get('/groups' + catName, function(req, res){
 		mongoose.model("Car").find({categoryName: catName}, function(err, cars) {
 			mongoose.model("Event").find(function (err, events) {
-   				res.render('view', {
-	   				cars : cars,
-	   				events : events
-				});
+				mongoose.model("Category").find({categoryName: catName}, function(err, categories) {
+   					res.render('view', {
+	   					cars : cars,
+	  	 				events : events,
+	 	  				categories : categories
+					});
+   				});
    			});
 		});
 	});
@@ -1006,11 +1012,14 @@ app.get('/test', function(req, res){
 app.post('/groups', function(req, res){
 	mongoose.model("Car").find({categoryName: req.body.categoryName}, function(err, cars) {
 		mongoose.model("Event").find(function (err, events) {
-   			res.render('view', {
-	   			cars : cars,
-	   			events : events
-			});
-   		});
+			mongoose.model("Category").find({categoryName: req.body.categoryName}, function(err, categories) {
+   				res.render('view', {
+	   				cars : cars,
+	   				events : events,
+	   				categories : categories
+				});
+   			});
+		});
 	});
 });
 
