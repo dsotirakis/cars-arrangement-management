@@ -4,7 +4,6 @@ var bodyParser = require('body-parser');
 var autoIncrement = require('mongoose-auto-increment');
 var stringify = require('json-stringify');
 var yesno = require('yesno');
-import alert from 'alert-node'
 const TreeMap = require("treemap-js");
 const MultiMap = require('multimap');
 const sortMap = require('sort-map');
@@ -829,10 +828,13 @@ function getMessage(start, stop, categoryName) {
 app.post("/addEvent", (req, res) => {
 
 	var myData = new Event(req.body);
-	
-	
+	console.log("sasa: " + new Date(req.body.startDate));	
+	console.log(req.body.categoryName)	
 	var start = new Date(myData.startDate);
 	var stop  = new Date(myData.endDate);	
+	console.log("start: " + start);
+
+	console.log("start: " + req.body.stopDate);
 	var today = new Date();
 	start = start.getTime() / 1000;
 	stop = stop.getTime() / 1000;
@@ -952,12 +954,46 @@ app.post("/addEvent", (req, res) => {
 						}
 					}
 
+
 					for (var i = 0; i < bookedCarsArr.length; i++){
 						Event.update({ _id: bookedCarsArr[i].eventId}, { $set: { carName: bookedCarsArr[i].carName }}, function(err, res) {
 							if (err) {
 								console.log("Something went wrong!");
 							}
 						});
+					}
+
+
+					var tempSum = [];
+					for (var i = 0; i < cars.length; i++){
+						var sum = 0;
+						for (var j = 0; j < bookedCarsArr.length; j++){
+							if (bookedCarsArr[j].carName === cars[i].carName){
+								sum = sum + bookedCarsArr[j].criticalSeconds[1] - bookedCarsArr[j].criticalSeconds[0];
+							}
+						}
+						console.log(cars[i].carName);
+						tempSum.push({sum: sum, newCarNo: i});
+					}
+
+					for (var i = 0; i < tempSum.length; i++){
+						console.log(tempSum[i]);
+					}
+					
+      				tempSum.sort(function(a,b){return b.sum - a.sum});
+      				console.log(tempSum);
+
+
+					for (var j = 0; j < cars.length; j++){
+						for (var i = 0; i < bookedCarsArr.length; i++){		
+							if (bookedCarsArr[i].carName === cars[j].carName){
+								Event.update({ _id: bookedCarsArr[i].eventId}, { $set: { carName: cars[tempSum[j].newCarNo].carName }}, function(err, res) {
+									if (err) {
+										console.log("Something went wrong!");
+									}
+								});
+							}
+						}
 					}
 				});
 			});
@@ -984,6 +1020,7 @@ function redirectFunction(app, catName) {
 			mongoose.model("Event").find(function (err, events) {
 				mongoose.model("Category").find({categoryName: catName}, function(err, categories) {
    					res.render('view', {
+						curCategory : catName,
 	   					cars : cars,
 	  	 				events : events,
 	 	  				categories : categories
@@ -1010,16 +1047,28 @@ app.get('/test', function(req, res){
 
 
 app.post('/groups', function(req, res){
+	var curCategory = req.body.categoryName;
 	mongoose.model("Car").find({categoryName: req.body.categoryName}, function(err, cars) {
 		mongoose.model("Event").find(function (err, events) {
 			mongoose.model("Category").find({categoryName: req.body.categoryName}, function(err, categories) {
    				res.render('view', {
+					curCategory : curCategory,
 	   				cars : cars,
 	   				events : events,
 	   				categories : categories
 				});
    			});
 		});
+	});
+});
+
+app.post('/updateCarForm', function(req, res){
+	var curCategory = req.body.categoryName;
+	mongoose.model("Car").find({categoryName: req.body.categoryName}, function(err, cars) {
+   				res.render('updateCar', {
+					curCategory : curCategory,
+	   				cars : cars
+				});
 	});
 });
 

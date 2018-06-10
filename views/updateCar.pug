@@ -1,0 +1,19 @@
+
+doctype html
+html
+  head
+    title Update Cars Priority
+  body
+    h1 Update Cars Priority
+
+      if cars.length > 0
+        h2 Update Car Priority
+        form(method = 'post', action = '/updateCar')
+          br
+          each car in cars
+            td #{car.carName + " - Priority Value: " + car.weight + " --> "}
+            input(class = "categ", type = 'text',  name = 'weight', value = car.weight)
+            input(type = "hidden", value = {'carName' : car.carName,'categoryName' : car.categoryName}, name = 'new')
+            br
+            br
+          input(type = 'submit', value = 'Update Values')
