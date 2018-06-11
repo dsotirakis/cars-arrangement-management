@@ -46,6 +46,7 @@ html
       if categories.length > 0 
         .row
 
+          hr(style='width: 100%; color: black; height: 1px; background-color:black;')
           form.form(action='/addCar' method='post')
             .form-group.col-xs-6
               label(for='car') Add Car:
@@ -78,10 +79,10 @@ html
 
 
           form.form(action='/updateCarForm' method='post')
-            .form-group.col-xs-2
+            .form-group.col-xs-3
               label(for='car') Update Car:
-                .col-sm-5
-                  .col-md-5
+                .col-sm-9
+                  .col-md-9
                     br
                     input(type = 'hidden', name = 'categoryName', value = curCategory)
                     input(type = 'submit', value= 'Update Cars')
@@ -89,12 +90,13 @@ html
         br
       br
 
+      hr(style='width: 100%; color: black; height: 1px; background-color:black;')
       .container
         .row
 
-          label(for='Event') Add Event:
+          label.col-sm-9(for='Event') Add Event:
             form.form(action='/addEvent' method='post')
-              .form-group.col-xs-6
+              .form-group.col-xs-9
                 .col-md-3
                   .form-group-sm
                     .input-group.dp1
@@ -149,22 +151,20 @@ html
 
 
             form.form(action='/deleteEvent' method='post')
-              .form-group.col-xs-3
+              .form-group.col-xs-2
                 label(for='car') Delete Event:
                   .col-sm-4
                     .col-md-4
                         br
-                        select(id = "eventDel", name = "event", size = events.length)
+                        select(id = "eventDel", name = "event", size = 5 )
                           each event in events
                             option(value={'id':event._id, 'categoryName':event.categoryName}) #{"Car: " + event.carName}
                           br
                           input(type= "submit", class = "eventDel", value = "Delete Event")
 
   
+    hr(style='width: 100%; color: black; height: 1px; background-color:black;')
 
-      if cars
-        each car in cars
-          li #{car.carName}
     #visualization
     script.
 

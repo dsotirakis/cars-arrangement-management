@@ -805,17 +805,23 @@ function getMessage(start, stop, categoryName) {
 					eventsArr.push({eventId: events[i].id, totalTime: totalTime, criticalSeconds: criticalSeconds});
 				}
 	
-				var carCount = 0;
+				var carCountBef = 0, carCountAft = 0;
 				for (var i = 0; i < eventsArr.length; i ++){
-					if ((start >= eventsArr[i].criticalSeconds[0] && start <= (eventsArr[i].criticalSeconds[1] + 10800)) ||
-				 		(stop >= eventsArr[i].criticalSeconds[0] && stop <= (eventsArr[i].criticalSeconds[1]) + 10800)){
-						carCount += 1;
+					if ((start >= eventsArr[i].criticalSeconds[0] - 10800 && start <= (eventsArr[i].criticalSeconds[1] + 10800))){
+						carCountBef += 1;
+						continue;
+					}
+				 	if ((stop >= eventsArr[i].criticalSeconds[0] - 10800 && stop <= (eventsArr[i].criticalSeconds[1] + 10800))){
+						carCountAft += 1;
 						console.log("in!");
 					}
 				}
 	
-				if (carCount == cars.length){
+				if (carCountBef >= cars.length){
 					return resolve("Unavaliable dates. All cars are booked.");
+				}
+				else if (carCountAft >= cars.length){
+					return resolve("Unavailable dates. All cars are booked.");
 				}
 				else
 					return resolve("");
@@ -930,7 +936,6 @@ app.post("/addEvent", (req, res) => {
 									if (toAdd && !overlapFlag){
 										bookedCarsArrToAdd = bookedCarsArrToAdd.concat(tempBookedElement);
 										breakFlag = true;
-										console.log(bookedCarsArr);
 									}
 									else
 										continue;
@@ -1049,7 +1054,7 @@ app.get('/test', function(req, res){
 app.post('/groups', function(req, res){
 	var curCategory = req.body.categoryName;
 	mongoose.model("Car").find({categoryName: req.body.categoryName}, function(err, cars) {
-		mongoose.model("Event").find(function (err, events) {
+		mongoose.model("Event").find({categoryName: curCategory}, function (err, events) {
 			mongoose.model("Category").find({categoryName: req.body.categoryName}, function(err, categories) {
    				res.render('view', {
 					curCategory : curCategory,
