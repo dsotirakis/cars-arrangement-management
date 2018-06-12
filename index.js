@@ -21,7 +21,7 @@ app.use(express.static("node_modules"));
 
 var mongoose = require("mongoose");
 mongoose.Promise = global.Promise;
-mongoose.connect("mongodb://localhost:27017/node-demo2");
+mongoose.connect("mongodb+srv://dimitris:abc123456789@bluerent-nqiw4.mongodb.net/test?retryWrites=true");
 //autoIncrement.initialize(mongoose.createConnection("mongodb://localhost:27017/node-demo2"));
 
 // Define User Model
@@ -48,10 +48,6 @@ var carSchema = new mongoose.Schema({
 
 var Car = mongoose.model("Car", carSchema);
 // Define index page
-app.get("/", (req, res) => {
-    res.render("index");
-    var users = getUsers();
-});
 
 var eventSchema = new mongoose.Schema({
 	startDate : Date,
@@ -68,13 +64,6 @@ app.get("/home", (req, res) => {
 		res,render('home', {
 			categories: categories,
 		});
-	});
-});
-
-app.get("/", (req, res) => {
-	alert(";ee;");
-	db.users.find({}, function(err, docs){
-	res.render("index", {users:docs});
 	});
 });
 
@@ -123,7 +112,7 @@ app.get("/event", (req, res) => {
 	});
 });
 
-app.get("/view_group", (req, res) => {
+app.get("/", (req, res) => {
 	mongoose.model("Category").find(function (err, categories) {
 		res.render('chooseGroups', {
 			categories: categories
@@ -295,7 +284,7 @@ app.post("/updateCar", (req, res) => {
 app.post("/addCategory", (req, res) => {
 	var myData = new Category(req.body);
 	myData.save().then(item => {
-		res.send("Category saved to database!");
+		res.redirect(301, '/');
 	})
 	.catch(err => {
 		res.status(400).send("Unable to save to database");
@@ -429,7 +418,6 @@ app.post("/addCar", (req, res) => {
 					}
 				});
 			});
-
 			redirectFunction(app, req.body.categoryName);
 			res.redirect(301, '/groups' + req.body.categoryName);
 			res.send("Event saved to database!");
@@ -445,7 +433,7 @@ app.post("/deleteEvent", (req, res) => {
 	console.log(req.body.event);
 	var today = new Date();
 	var temp = JSON.parse(req.body.event);
-	Event.remove({ _id : temp.id }).then(item => {
+	Event.deleteOne({ _id : temp.id }).then(item => {
 		
 		
 			Event.find({categoryName:temp.categoryName}, function(err, events) {
@@ -594,7 +582,7 @@ app.post("/deleteCategory", (req, res) => {
 		});
 
 		
-	}).catch(res.redirect(301, '/groups' + req.body.categoryName));
+	}).catch(res.redirect(301, '/'));
 });
 
 app.post("/deleteCar", (req, res) => {
@@ -1000,12 +988,13 @@ app.post("/addEvent", (req, res) => {
 							}
 						}
 					}
-				});
-			});
 
-			redirectFunction(app, req.body.categoryName);
-			res.redirect(301, '/groups' + req.body.categoryName);
-			res.send("Event saved to database!");
+					redirectFunction(app, req.body.categoryName);
+					res.redirect(301, '/groups' + req.body.categoryName);
+					console.log(bookedCarsArr);
+				}).catch(err => { res.status(400).send("salas"); });
+			}).catch( err => { res.status(400).send("salas2"); });
+
 
 			})
 			.catch(err => {
@@ -1023,6 +1012,8 @@ function redirectFunction(app, catName) {
 	app.get('/groups' + catName, function(req, res){
 		mongoose.model("Car").find({categoryName: catName}, function(err, cars) {
 			mongoose.model("Event").find(function (err, events) {
+				
+				console.log("salasala: " + events.length);
 				mongoose.model("Category").find({categoryName: catName}, function(err, categories) {
    					res.render('view', {
 						curCategory : catName,
@@ -1055,6 +1046,7 @@ app.post('/groups', function(req, res){
 	var curCategory = req.body.categoryName;
 	mongoose.model("Car").find({categoryName: req.body.categoryName}, function(err, cars) {
 		mongoose.model("Event").find({categoryName: curCategory}, function (err, events) {
+			console.log("salasala: " + events.length);
 			mongoose.model("Category").find({categoryName: req.body.categoryName}, function(err, categories) {
    				res.render('view', {
 					curCategory : curCategory,

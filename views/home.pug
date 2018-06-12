@@ -1,0 +1,40 @@
+doctype html
+html
+  head
+    title Choose Category
+  body
+    h1 Choose Timeline
+      br
+
+      if categories.length > 0
+        h2 Choose Timeline
+        form(method = 'post', action = '/groups')
+          select(id = "category", name = "categoryName", size = categories.length)
+            each category in categories
+              option(value=category.categoryName) #{category.categoryName}
+          br
+          input(type= "submit", class = "category", value = "Choose Group to view")
+
+        br
+      br
+
+
+    h1 Add Car Category
+    form(method='post', action='/addCategory')
+      label Car category
+      br
+      input(type='text', name='categoryName', placeholder='Enter category name', required='')
+      input(type='submit', value='Add Category')
+
+
+  if categories.length > 0
+  h2 Delete Category
+    form(method = 'post', action = '/deleteCategory')
+      select(id = "catDel", name = "categoryName", size = categories.length)
+        each category in categories
+          option(value=category.categoryName) #{category.categoryName}
+      br
+      input(type= "submit", class = "catDel", value = "Delete Category")
+
+    br
+  br
