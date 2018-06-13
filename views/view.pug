@@ -100,14 +100,14 @@ html
           label.col-sm-9(for='Event') Add Event:
             form.form(action='/addEvent' method='post')
               .form-group.col-xs-9
-                .col-md-3
+                .col-md-5
                   .form-group-sm
                     .input-group.dp1
                       input#start.form-control(type='text' name='startDate')
                       span.input-group-addon
                         span.glyphicon.glyphicon-calendar
                   
-                .col-md-3
+                .col-md-5
                   .form-group-sm
                     .input-group.dp2
                       input#start.form-control(type='text' name='endDate')
@@ -123,6 +123,7 @@ html
                   $(function () {
                     $('.dp1').datetimepicker({
                       format: 'MM.DD.YYYY HH:mm',
+                      extraFormats: ['MM.DD.YYYY HH:mm', 'DD.MM.YYYY HH:mm'],  
                       stepping: 1,
                       useCurrent: false,
                       showClose: true,
@@ -198,7 +199,7 @@ html
                    end: eventsToString[i].endDate, 
                    group: eventsToString[i].carName, 
                    className:eventsToString[i].carName, 
-                   content: eventsToString[i].startDate + " - " +  eventsToString[i].endDate, 
+                   content: eventsToString[i].carName + " - ", 
                    id:eventsToString[i]._id});
       }
 

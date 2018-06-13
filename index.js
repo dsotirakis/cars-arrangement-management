@@ -21,7 +21,7 @@ app.use(express.static("node_modules"));
 
 var mongoose = require("mongoose");
 mongoose.Promise = global.Promise;
-mongoose.connect("mongodb+srv://dimitris:abc123456789@bluerent-nqiw4.mongodb.net/test?retryWrites=true");
+mongoose.connect("mongodb+srv://dimitris:abc123456789@bluerent-nqiw4.mongodb.net/test?retryWrites=false");
 //autoIncrement.initialize(mongoose.createConnection("mongodb://localhost:27017/node-demo2"));
 
 // Define User Model
@@ -416,11 +416,11 @@ app.post("/addCar", (req, res) => {
 							}
 						});
 					}
+					
+					redirectFunction(app, req.body.categoryName);
+					res.redirect(301, '/groups' + req.body.categoryName);
 				});
 			});
-			redirectFunction(app, req.body.categoryName);
-			res.redirect(301, '/groups' + req.body.categoryName);
-			res.send("Event saved to database!");
 
 			})
 	.catch(err => {
@@ -571,16 +571,16 @@ app.post("/deleteEvent", (req, res) => {
 });
 
 app.post("/deleteCategory", (req, res) => {
-	Category.remove({categoryName : req.body.categoryName}).then(item => {
+	Category.deleteOne({categoryName : req.body.categoryName}).then(item => {
+
 		Event.deleteMany( {"categoryName" : req.body.categoryName}).then(item => {
 			console.log("Done");
 			
-			Car.deleteMany( {"categoryName" : req.body.categoryName}).then(item => {
+			Car.deleteOne( {"categoryName" : req.body.categoryName}).then(item => {
 				console.log("Done");
 			});
 		
 		});
-
 		
 	}).catch(res.redirect(301, '/'));
 });
@@ -590,11 +590,10 @@ app.post("/deleteCar", (req, res) => {
 	var temp = JSON.parse(req.body.carName);
 	var today = new Date();
 	console.log("here: " + temp.categoryName)
-	Car.remove({ carName: temp.carName }).then(item => {
+	Car.deleteOne({ carName: temp.carName, categoryName: temp.categoryName }).then(item => {
 
-		Event.deleteMany( {"carName" : temp.carName}).then(item => {
+		Event.deleteMany( {"carName" : temp.carName, categoryName : temp.categoryName}).then(item => {
 			console.log("Done");
-		})
 
 			console.log(item);	
 			Event.find({categoryName:temp.categoryName}, function(err, events) {
@@ -633,10 +632,6 @@ app.post("/deleteCar", (req, res) => {
 					var index 		    = -1;
 					var durationsToSort = [];
 					var breakFlag 		= false;
-
-					for (var i = 0; i < durationsToSort.length; i++){
-						console.log(eventsArr[i].totalTime);
-					}
 
 					var bookedCarsArr = [];
 					var bookedCarsArrToAdd = [];
@@ -718,12 +713,14 @@ app.post("/deleteCar", (req, res) => {
 							}
 						});
 					}
+				
+					redirectFunction(app, temp.categoryName);
+					res.redirect(301, '/groups' + temp.categoryName);
 				});
 			});
 
-			redirectFunction(app, temp.categoryName);
-			res.redirect(301, '/groups' + temp.categoryName);
-			res.send("Event saved to database!");
+		});
+
 
 			})
 			.catch(err => {
@@ -800,17 +797,14 @@ function getMessage(start, stop, categoryName) {
 						console.log("in2!");
 						continue;
 					}
-				 	if ((start >= eventsArr[i].criticalSeconds[0] - 10800) && (stop <= (eventsArr[i].criticalSeconds[1] + 10800))){
+				 	if ((stop >= eventsArr[i].criticalSeconds[0] - 10800) && (stop <= (eventsArr[i].criticalSeconds[1] + 10800))){
 						carCountAft += 1;
 						console.log("in!");
 					}
 				}
 	
-				if (carCountBef >= cars.length){
+				if (carCountBef + carCountAft >= cars.length){
 					return resolve("Unavaliable dates. All cars are booked.");
-				}
-				else if (carCountAft >= cars.length){
-					return resolve("Unavailable dates. All cars are booked.");
 				}
 				else
 					return resolve("");
@@ -1012,9 +1006,7 @@ app.post("/addEvent", (req, res) => {
 function redirectFunction(app, catName) {
 	app.get('/groups' + catName, function(req, res){
 		mongoose.model("Car").find({categoryName: catName}, function(err, cars) {
-			mongoose.model("Event").find(function (err, events) {
-				
-				console.log("salasala: " + events.length);
+			mongoose.model("Event").find({categoryName: catName}, function (err, events) {
 				mongoose.model("Category").find({categoryName: catName}, function(err, categories) {
    					res.render('view', {
 						curCategory : catName,
