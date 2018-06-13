@@ -795,11 +795,12 @@ function getMessage(start, stop, categoryName) {
 	
 				var carCountBef = 0, carCountAft = 0;
 				for (var i = 0; i < eventsArr.length; i ++){
-					if ((start >= eventsArr[i].criticalSeconds[0] - 10800 && start <= (eventsArr[i].criticalSeconds[1] + 10800))){
+					if ((start >= eventsArr[i].criticalSeconds[0] - 10800) && (start <= eventsArr[i].criticalSeconds[1] + 10800)){
 						carCountBef += 1;
+						console.log("in2!");
 						continue;
 					}
-				 	if ((stop >= eventsArr[i].criticalSeconds[0] - 10800 && stop <= (eventsArr[i].criticalSeconds[1] + 10800))){
+				 	if ((start >= eventsArr[i].criticalSeconds[0] - 10800) && (stop <= (eventsArr[i].criticalSeconds[1] + 10800))){
 						carCountAft += 1;
 						console.log("in!");
 					}
@@ -992,8 +993,8 @@ app.post("/addEvent", (req, res) => {
 					redirectFunction(app, req.body.categoryName);
 					res.redirect(301, '/groups' + req.body.categoryName);
 					console.log(bookedCarsArr);
-				}).catch(err => { res.status(400).send("salas"); });
-			}).catch( err => { res.status(400).send("salas2"); });
+				}).catch(err => { res.status(400).send("Error1"); });
+			}).catch( err => { res.status(400).send("Error2"); });
 
 
 			})
