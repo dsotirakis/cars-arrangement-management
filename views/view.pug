@@ -114,6 +114,11 @@ html
                       span.input-group-addon
                         span.glyphicon.glyphicon-calendar
 
+                  br          
+                .col-md-4
+                  .form-group-sm
+                    .input-group.person
+                      input#start.form-control(type='text' name='person', placeholder='Add Customer Name', required = 'Required Field!')
 
                 .col-md-3
                   .form-group
@@ -162,7 +167,7 @@ html
                         br
                         select(id = "eventDel", name = "event", size = 5 )
                           each event in events
-                            option(value={'id':event._id, 'categoryName':event.categoryName}) #{"Car: " + event.carName}
+                            option(value={'id':event._id, 'categoryName':event.categoryName}) #{event.person + " - Car: " + event.carName}
                           br
                           input(type= "submit", class = "eventDel", value = "Delete Event")
 
@@ -199,7 +204,7 @@ html
                    end: eventsToString[i].endDate, 
                    group: eventsToString[i].carName, 
                    className:eventsToString[i].carName, 
-                   content: eventsToString[i].carName + " - ", 
+                   content: eventsToString[i].person, 
                    id:eventsToString[i]._id});
       }
 

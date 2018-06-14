@@ -557,12 +557,11 @@ app.post("/deleteEvent", (req, res) => {
 							}
 						});
 					}
+			
+					redirectFunction(app, temp.categoryName);
+					res.redirect(301, '/groups' + temp.categoryName);
 				});
 			});
-
-			redirectFunction(app, temp.categoryName);
-			res.redirect(301, '/groups' + temp.categoryName);
-			res.send("Event saved to database!");
 
 			})
 			.catch(err => {
@@ -792,12 +791,14 @@ function getMessage(start, stop, categoryName) {
 	
 				var carCountBef = 0, carCountAft = 0;
 				for (var i = 0; i < eventsArr.length; i ++){
-					if ((start >= eventsArr[i].criticalSeconds[0] - 10800) && (start <= eventsArr[i].criticalSeconds[1] + 10800)){
+					if ((eventsArr[i].criticalSeconds[0] - 10800 >= start  && eventsArr[i].criticalSeconds[0] - 10800 <= stop) ||
+						 (start >= eventsArr[i].criticalSeconds[0] - 10800 && start <= eventsArr[i].criticalSeconds[1] + 10800)){
 						carCountBef += 1;
 						console.log("in2!");
 						continue;
 					}
-				 	if ((stop >= eventsArr[i].criticalSeconds[0] - 10800) && (stop <= (eventsArr[i].criticalSeconds[1] + 10800))){
+				 	if ((eventsArr[i].criticalSeconds[1] + 10800 >= start && eventsArr[i].criticalSeconds[1] + 10800 <= stop) ||
+						 (stop >= eventsArr[i].criticalSeconds[0] - 10800 && stop <= eventsArr[i].criticalSeconds[1] + 10800)){
 						carCountAft += 1;
 						console.log("in!");
 					}
@@ -897,8 +898,8 @@ app.post("/addEvent", (req, res) => {
 									var overlapFlag = false;
 									for (var j = 0; j < tempBookedArr.length; j++){
 										if (cars[k].carName == tempBookedArr[j].carName) {
-											if (((eventsArr[i].criticalSeconds[0] >= tempBookedArr[j].criticalSeconds[0]) && (eventsArr[i].criticalSeconds[0] <= tempBookedArr[j].criticalSeconds[1])) ||
-										    	((eventsArr[i].criticalSeconds[1] >= tempBookedArr[j].criticalSeconds[0]) && (eventsArr[i].criticalSeconds[1] <= tempBookedArr[j].criticalSeconds[1]))){
+											if (((eventsArr[i].criticalSeconds[0] >= tempBookedArr[j].criticalSeconds[0] - 10800) && (eventsArr[i].criticalSeconds[0] <= tempBookedArr[j].criticalSeconds[1] + 10800)) ||
+										    	((eventsArr[i].criticalSeconds[1] >= tempBookedArr[j].criticalSeconds[0] - 10800) && (eventsArr[i].criticalSeconds[1] <= tempBookedArr[j].criticalSeconds[1] + 10800))){
 										    	overlapFlag = true;
 										    	console.log("overlapping: " + i + " " + k);
 										    	
@@ -997,7 +998,10 @@ app.post("/addEvent", (req, res) => {
 			});
 	}
 	else{
-		res.status(400).send("Reasons: " + message1 + " - " +message2);
+		//res.status(400).send("Reasons: " + message1 + " - " +message2);
+		res.render('error', {
+			message: message1 + " - " + message2
+		});
 	}
 });
 
