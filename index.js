@@ -4,7 +4,13 @@ var bodyParser = require('body-parser');
 var autoIncrement = require('mongoose-auto-increment');
 var stringify = require('json-stringify');
 var yesno = require('yesno');
+var l = require('passport-login-check')
+
+var mongoose = require("mongoose");
+var session = require('express-session')
+var cookieParser = require('cookie-parser');
 const TreeMap = require("treemap-js");
+const passport = require('passport');
 const MultiMap = require('multimap');
 const sortMap = require('sort-map');
 const arraySort = require('array-sort');
@@ -17,14 +23,60 @@ app.set('view engine', 'pug');
 app.set('views', './views');
 //app.use(express.static("public"));
 app.use(express.static("node_modules"));
-
 app.get("/", function(req, res) {
 
 	res.render('auth');
 
 });
 
-var mongoose = require("mongoose");
+/*  PASSPORT SETUP  */
+
+app.use(session({ secret: 'anything' }));
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.get('/success', (req, res) => res.redirect(301, '/home'));
+app.get('/error', (req, res) => res.send("No such user."));
+
+passport.serializeUser(function(user, cb) {
+  cb(null, user.id);
+});
+
+passport.deserializeUser(function(id, cb) {
+  UserDetails.findById(id, function(err, user) {
+    cb(err, user);
+  });
+});
+
+/* PASSPORT LOCAL AUTHENTICATION */
+
+const LocalStrategy = require('passport-local').Strategy;
+
+passport.use(new LocalStrategy(
+  function(username, password, done) {
+      UserDetails.findOne({
+        username: username
+      }, function(err, user) {
+        if (err) {
+          return done(err);
+        }
+
+        if (!user) {
+          return done(null, false);
+        }
+
+        if (user.password != password) {
+          return done(null, false);
+        }
+        return done(null, user);
+      });
+  }
+));
+
+app.post('/',
+  passport.authenticate('local', { failureRedirect: '/error' , successRedirect: '/home'})),
+
+	
 mongoose.Promise = global.Promise;
 mongoose.connect("mongodb+srv://dimitris:abc123456789@bluerent-nqiw4.mongodb.net/test?retryWrites=false");
 //autoIncrement.initialize(mongoose.createConnection("mongodb://localhost:27017/node-demo2"));
@@ -63,15 +115,6 @@ var eventSchema = new mongoose.Schema({
 
 var Event = mongoose.model("Event", eventSchema);
 
-function getUsers(){
-	User.find({}, function(err, users) {
-  		if (err) throw err;
-		
-  		// object of all the users
-  		return users;
-	});
-};
-
 // Define category page
 app.get("/category", (req, res) => {
 	mongoose.model("Category").find(function (err, categories) {
@@ -107,23 +150,22 @@ app.get("/event", (req, res) => {
 	});
 });
 
-app.get("/home", (req, res) => {
+function adminIsLoggedIn(req, res, next) {
+
+    // if user is authenticated in the session, carry on 
+    if (req.isAuthenticated())
+        return next();
+
+    // if they aren't redirect them to the home page
+    res.redirect('/');
+}
+
+app.get("/home", adminIsLoggedIn, (req, res) => {
 	mongoose.model("Category").find(function (err, categories) {
 		res.render('chooseGroups', {
 			categories: categories
 		});
 	});
-});
-
-app.post("/addname", (req, res) => {
-    var myData = new User(req.body);
-    myData.save()
-        .then(item => {
-            res.send("Name saved to database");
-        })
-        .catch(err => {
-            res.status(400).send("Unable to save to database");
-        });
 });
 
 app.post("/updateCar", (req, res) => {
@@ -660,56 +702,6 @@ app.get('/show_events', function(req, res){
 });
 
 
-
-/*  PASSPORT SETUP  */
-
-const passport = require('passport');
-app.use(passport.initialize());
-app.use(passport.session());
-
-app.get('/success', (req, res) => res.redirect(301, '/home'));
-app.get('/error', (req, res) => res.send("No such user."));
-
-passport.serializeUser(function(user, cb) {
-  cb(null, user.id);
-});
-
-passport.deserializeUser(function(id, cb) {
-  User.findById(id, function(err, user) {
-    cb(err, user);
-  });
-});
-
-/* PASSPORT LOCAL AUTHENTICATION */
-
-const LocalStrategy = require('passport-local').Strategy;
-
-passport.use(new LocalStrategy(
-  function(username, password, done) {
-      UserDetails.findOne({
-        username: username
-      }, function(err, user) {
-        if (err) {
-          return done(err);
-        }
-
-        if (!user) {
-          return done(null, false);
-        }
-
-        if (user.password != password) {
-          return done(null, false);
-        }
-        return done(null, user);
-      });
-  }
-));
-
-app.post('/',
-  passport.authenticate('local', { failureRedirect: '/error' }),
-  function(req, res) {
-    res.redirect('/success?username='+req.user.username);
-  });
 
 
 app.listen(process.env.PORT || 8080, function() {
