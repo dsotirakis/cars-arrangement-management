@@ -5,8 +5,9 @@ html
     title Error
   body
 
-    form(method = 'get', action = '/')
-      input(type= "submit", value = "Home")
+    form(method = 'post', action = '/groups')
+      input(type= "submit", value = "Back to Category")
+      input(type="hidden", name='categoryName', value= curCategory)
     h1 Error
       br
 

@@ -497,6 +497,7 @@ app.post("/addEvent", (req, res) => {
 		else{
 			//res.status(400).send("Reasons: " + message1 + " - " +message2);
 			res.render('error', {
+				curCategory: req.body.categoryName,
 				message: message1 + " - " + message2
 			});
 		}
