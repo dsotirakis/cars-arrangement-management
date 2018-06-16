@@ -43,6 +43,9 @@ html
     p
       | This timeline displays the total booked cars. Every rectangle represents the start and stop date of the event.
 
+
+      form(method = 'get', action = '/')
+        input(type= "submit", value = "Home")
       if categories.length > 0 
         .row
 
@@ -97,20 +100,25 @@ html
           label.col-sm-9(for='Event') Add Event:
             form.form(action='/addEvent' method='post')
               .form-group.col-xs-9
-                .col-md-3
+                .col-md-5
                   .form-group-sm
                     .input-group.dp1
                       input#start.form-control(type='text' name='startDate')
                       span.input-group-addon
                         span.glyphicon.glyphicon-calendar
                   
-                .col-md-3
+                .col-md-5
                   .form-group-sm
                     .input-group.dp2
                       input#start.form-control(type='text' name='endDate')
                       span.input-group-addon
                         span.glyphicon.glyphicon-calendar
 
+                  br          
+                .col-md-4
+                  .form-group-sm
+                    .input-group.person
+                      input#start.form-control(type='text' name='person', placeholder='Add Customer Name', required = 'Required Field!')
 
                 .col-md-3
                   .form-group
@@ -120,6 +128,7 @@ html
                   $(function () {
                     $('.dp1').datetimepicker({
                       format: 'MM.DD.YYYY HH:mm',
+                      extraFormats: ['MM.DD.YYYY HH:mm', 'DD.MM.YYYY HH:mm'],  
                       stepping: 1,
                       useCurrent: false,
                       showClose: true,
@@ -158,7 +167,7 @@ html
                         br
                         select(id = "eventDel", name = "event", size = 5 )
                           each event in events
-                            option(value={'id':event._id, 'categoryName':event.categoryName}) #{"Car: " + event.carName}
+                            option(value={'id':event._id, 'categoryName':event.categoryName}) #{event.person + " - Car: " + event.carName}
                           br
                           input(type= "submit", class = "eventDel", value = "Delete Event")
 
@@ -195,7 +204,7 @@ html
                    end: eventsToString[i].endDate, 
                    group: eventsToString[i].carName, 
                    className:eventsToString[i].carName, 
-                   content: eventsToString[i].startDate + " - " +  eventsToString[i].endDate, 
+                   content: eventsToString[i].person, 
                    id:eventsToString[i]._id});
       }
 

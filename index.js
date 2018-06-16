@@ -366,7 +366,7 @@ function getMessage(start, stop, categoryName) {
 						carsBooked.add(eventsArr[i].carName);
 						console.log("in2!");
 					}
-					if ((eventsArr[i].criticalSeconds[1] + 10800 >= start && eventsArr[i].criticalSeconds[1] + 10800 <= stop) ||
+				 	if ((eventsArr[i].criticalSeconds[1] + 10800 >= start && eventsArr[i].criticalSeconds[1] + 10800 <= stop) ||
 						 (stop >= eventsArr[i].criticalSeconds[0] - 10800 && stop <= eventsArr[i].criticalSeconds[1] + 10800)){
 						carCountAft += 1;
 						carsBooked.add(eventsArr[i].carName);
