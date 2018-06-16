@@ -15,22 +15,26 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'pug');
 app.set('views', './views');
-
 //app.use(express.static("public"));
 app.use(express.static("node_modules"));
+
+app.get("/", function(req, res) {
+
+	res.render('auth');
+
+});
 
 var mongoose = require("mongoose");
 mongoose.Promise = global.Promise;
 mongoose.connect("mongodb+srv://dimitris:abc123456789@bluerent-nqiw4.mongodb.net/test?retryWrites=false");
 //autoIncrement.initialize(mongoose.createConnection("mongodb://localhost:27017/node-demo2"));
 
-// Define User Model
-var nameSchema = new mongoose.Schema({
-    firstName: String,
-    lastName: String
-}, {versionKey: false});
-
-var User = mongoose.model("User", nameSchema);
+const Schema = mongoose.Schema;
+const UserDetail = new Schema({
+      username: String,
+      password: String
+    });
+const UserDetails = mongoose.model('userInfo', UserDetail, 'userInfo');
 
 // Define Category Model
 var categorySchema = new mongoose.Schema({
@@ -58,15 +62,6 @@ var eventSchema = new mongoose.Schema({
 });
 
 var Event = mongoose.model("Event", eventSchema);
-
-app.get("/home", (req, res) => {
-	mongoose.model("Category").find(function(err, categories) {
-		res,render('home', {
-			categories: categories,
-		});
-	});
-});
-
 
 function getUsers(){
 	User.find({}, function(err, users) {
@@ -112,7 +107,7 @@ app.get("/event", (req, res) => {
 	});
 });
 
-app.get("/", (req, res) => {
+app.get("/home", (req, res) => {
 	mongoose.model("Category").find(function (err, categories) {
 		res.render('chooseGroups', {
 			categories: categories
@@ -663,6 +658,59 @@ app.get('/show_events', function(req, res){
    });
 });
 });
+
+
+
+/*  PASSPORT SETUP  */
+
+const passport = require('passport');
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.get('/success', (req, res) => res.redirect(301, '/home'));
+app.get('/error', (req, res) => res.send("No such user."));
+
+passport.serializeUser(function(user, cb) {
+  cb(null, user.id);
+});
+
+passport.deserializeUser(function(id, cb) {
+  User.findById(id, function(err, user) {
+    cb(err, user);
+  });
+});
+
+/* PASSPORT LOCAL AUTHENTICATION */
+
+const LocalStrategy = require('passport-local').Strategy;
+
+passport.use(new LocalStrategy(
+  function(username, password, done) {
+      UserDetails.findOne({
+        username: username
+      }, function(err, user) {
+        if (err) {
+          return done(err);
+        }
+
+        if (!user) {
+          return done(null, false);
+        }
+
+        if (user.password != password) {
+          return done(null, false);
+        }
+        return done(null, user);
+      });
+  }
+));
+
+app.post('/',
+  passport.authenticate('local', { failureRedirect: '/error' }),
+  function(req, res) {
+    res.redirect('/success?username='+req.user.username);
+  });
+
 
 app.listen(process.env.PORT || 8080, function() {
 	console.log("Open server.");
