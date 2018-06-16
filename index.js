@@ -664,6 +664,6 @@ app.get('/show_events', function(req, res){
 });
 });
 
-app.listen(8080, function() {
+app.listen(process.env.PORT || 8080, function() {
 	console.log("Open server.");
 });
