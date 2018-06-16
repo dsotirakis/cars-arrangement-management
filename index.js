@@ -358,6 +358,21 @@ function eqSet(as, bs) {
     return true;
 }
 
+function updateEventsMongoose(id, carName){
+	return new Promise(function(resolve, reject) {
+		
+		Event.update({ _id: id}, { $set: { carName: carName }}, function(err, res) {
+			if (err) {
+				console.log("Something went wrong!");
+			}
+			else
+				return resolve();
+		});
+	});
+}
+
+
+
 function getMessage(start, stop, categoryName) {
 	return new Promise(function(resolve, reject) {
 		Event.find({categoryName:categoryName}, function(err, events) {
@@ -468,19 +483,31 @@ app.post("/addEvent", (req, res) => {
 						}
 					
       					tempSum.sort(function(a,b){return b.sum - a.sum});
-      					console.log(tempSum);
+						for (var i = 0; i < tempSum.length; i++){
+							console.log(tempSum[i]);
+						}
+      					console.log("cars: " + cars);
 
 
 						for (var j = 0; j < cars.length; j++){
+
+	
+							var bookedCarsToDelete = [];
 							for (var i = 0; i < bookedCarsArr.length; i++){		
 								if (bookedCarsArr[i].carName === cars[j].carName && bookedCarsArr[i].criticalSeconds[0] > maxSec){
-									Event.update({ _id: bookedCarsArr[i].eventId}, { $set: { carName: cars[tempSum[j].newCarNo].carName }}, function(err, res) {
-										if (err) {
-											console.log("Something went wrong!");
-										}
+								
+									updateEventsMongoose(bookedCarsArr[i].eventId, cars[tempSum[j].newCarNo].carName).then( item => {
+									
+										bookedCarsToDelete.push(i);
+										console.log("done");
 									});
 								}
 							}
+								console.log("before: " + bookedCarsArr.length);
+							for (var i = 0; i < bookedCarsToDelete.length; i++){
+								bookedCarsArr.splice(bookedCarsToDelete[i], 1);
+							}
+								console.log("agter: " + bookedCarsArr.length);
 						}
 
 						redirectFunction(app, req.body.categoryName);
@@ -530,10 +557,16 @@ function shuffleEvents(cars, events) {
 						
 						// Fill the events map.
 						
-						eventsArr.push({eventId: events[i].id, totalTime: totalTime, criticalSeconds: criticalSeconds, startDate: startDate_toDate, prevCarName: events[i].carName});
+						eventsArr.push({eventId: events[i].id, totalTime: 100000 - totalTime, criticalSeconds: criticalSeconds, startDate: startDate_toDate, prevCarName: events[i].carName});
 					}
 
-						arraySort(eventsArr, 'totalTime', {reverse: true});
+						arraySort(eventsArr, ['startDate', 'totalTime']);
+						
+						
+						for (var i = 0; i < eventsArr.length; i++){
+							console.log("nena: " + eventsArr[i].startDate + " - " + eventsArr[i].totalTime);
+						}
+		
 						// Sort the multimap, based on the event's total time.
 						var maxDuration     = -1;
 						var count		    =  0;
@@ -574,7 +607,9 @@ function shuffleEvents(cars, events) {
 										for (var j = 0; j < tempBookedArr.length; j++){
 											if (cars[k].carName == tempBookedArr[j].carName) {
 												if (((eventsArr[i].criticalSeconds[0] >= tempBookedArr[j].criticalSeconds[0] - 10800) && (eventsArr[i].criticalSeconds[0] <= tempBookedArr[j].criticalSeconds[1] + 10800)) ||
-											    	((eventsArr[i].criticalSeconds[1] >= tempBookedArr[j].criticalSeconds[0] - 10800) && (eventsArr[i].criticalSeconds[1] <= tempBookedArr[j].criticalSeconds[1] + 10800))){
+											    	((eventsArr[i].criticalSeconds[1] >= tempBookedArr[j].criticalSeconds[0] - 10800) && (eventsArr[i].criticalSeconds[1] <= tempBookedArr[j].criticalSeconds[1] + 10800)) ||
+											    	((eventsArr[i].criticalSeconds[0] <= tempBookedArr[j].criticalSeconds[0] - 10800) && (eventsArr[i].criticalSeconds[1] >= tempBookedArr[j].criticalSeconds[0] - 10800)) ||
+											    	((eventsArr[i].criticalSeconds[0] <= tempBookedArr[j].criticalSeconds[1] + 10800) && (eventsArr[i].criticalSeconds[1] >= tempBookedArr[j].criticalSeconds[1] + 10800))){
 											    	overlapFlag = true;
 										    		console.log("overlapping: " + i + " " + k);
 										    	
@@ -608,7 +643,7 @@ function shuffleEvents(cars, events) {
 
 									if (bookedCarsArrToAdd.length == 0){
 										console.log("Not availiable date!");
-										break;
+										continue;
 									}
 									console.log("pwsGinetai");
 									bookedCarsArr = bookedCarsArr.concat(bookedCarsArrToAdd);
@@ -622,11 +657,9 @@ function shuffleEvents(cars, events) {
 						for (var i = 0; i < bookedCarsArr.length; i++){
 							if (bookedCarsArr[i].startDate > today){
 								console.log("giatiedw");
-								Event.update({ _id: bookedCarsArr[i].eventId}, { $set: { carName: bookedCarsArr[i].carName }}, function(err, res) {
-									if (err) {
-										console.log("Something went wrong!");
-									}
-								});
+									updateEventsMongoose(bookedCarsArr[i].eventId, bookedCarsArr[i].carName).then( item => {
+										console.log("done");
+									});
 							}
 						}
 
