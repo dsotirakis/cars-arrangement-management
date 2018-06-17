@@ -45,32 +45,32 @@ html
 
 
       form(method = 'get', action = '/home')
-        input(type= "submit", value = "Home")
+        input(type= "submit", value = "Αρχική Σελίδα")
       if categories.length > 0 
         .row
 
           hr(style='width: 100%; color: black; height: 1px; background-color:black;')
           form.form(action='/addCar' method='post')
             .form-group.col-xs-6
-              label(for='car') Add Car:
+              label.col-md-4(for='car') Εισάγετε Αυτοκίνητο:
                 .col-sm-3
                   .col-md-3
                     br
                     .input-group 
                   
-                      input(class='categ', type='text', name='carName', placeholder='Enter Car Number', required='', autocomplete="off")
+                      input(class='categ', type='text', name='carName', placeholder='Πινακίδες Αυτοκινήτου', required='', autocomplete="off")
                   
                       span.input-group-addon
-                      input(class='categ', type='text', name='brand', placeholder='Enter Car Model', required='', autocomplete="off")
+                      input(class='categ', type='text', name='brand', placeholder='Μοντέλο Αυτοκινήτου', required='', autocomplete="off")
                       input(type="hidden", name='weight', value = 0)
                       input(type="hidden", name='categoryName', value = curCategory) 
                       span.input-group-addon
-                      input(type='submit', value='Add Car')
+                      input(type='submit', value='Καταχώρηση')
                       br
      
           form.form(action='/deleteCar' method='post')
             .form-group.col-xs-3
-              label(for='car') Delete Car:
+              label(for='car') Διαγραφή Αυτοκινήτου:
                 .col-sm-4
                   .col-md-4
                       br
@@ -78,17 +78,17 @@ html
                         each car in cars
                           option(value={'carName':car.carName, 'categoryName':car.categoryName}) #{car.carName + " - " + car.brand}
                         br
-                        input(type= "submit", class = "carDel", value = "Delete Car")
+                        input(type= "submit", class = "carDel", value = "Διαγραφή Αυτοκινήτου")
 
 
           form.form(action='/updateCarForm' method='post')
             .form-group.col-xs-3
-              label(for='car') Update Car:
+              label(for='car') Επεξεργασία προτεραιότητας Αυτοκινήτων:
                 .col-sm-9
                   .col-md-9
                     br
                     input(type = 'hidden', name = 'categoryName', value = curCategory)
-                    input(type = 'submit', value= 'Update Cars')
+                    input(type = 'submit', value= 'Επεξεργασία προτεραιότητας')
 
         br
       br
@@ -97,7 +97,7 @@ html
       .container
         .row
 
-          label.col-sm-9(for='Event') Add Event:
+          label.col-sm-9(for='Event') Εισάγετε κράτηση:
             form.form(action='/addEvent' method='post')
               .form-group.col-xs-9
                 .col-md-5
@@ -118,12 +118,12 @@ html
                 .col-md-4
                   .form-group-sm
                     .input-group.person
-                      input#start.form-control(type='text' name='person', placeholder='Add Customer Name', required = 'Required Field!')
+                      input#start.form-control(type='text' name='person', placeholder='Ονοματεπώνυμο', required = 'Required Field!')
 
                 .col-md-3
                   .form-group
                     input#start.form-control(type='hidden' name='categoryName', value = curCategory)
-                button.btn.btn-primary Submit
+                button.btn.btn-primary Καταχώρηση
                 script.
                   $(function () {
                     $('.dp1').datetimepicker({
@@ -160,16 +160,16 @@ html
 
 
             form.form(action='/deleteEvent' method='post')
-              .form-group.col-xs-2
-                label(for='car') Delete Event:
-                  .col-sm-4
-                    .col-md-4
+              .form-group.col-xs-1
+                label(for='car') Διαγράψτε Κράτηση:
+                  .col-sm-3
+                    .col-md-3
                         br
                         select(id = "eventDel", name = "event", size = 5 )
                           each event in events
                             option(value={'id':event._id, 'categoryName':event.categoryName}) #{event.person + " - Car: " + event.carName}
                           br
-                          input(type= "submit", class = "eventDel", value = "Delete Event")
+                          input(type= "submit", class = "eventDel", value = "Διαγραφή")
 
   
     hr(style='width: 100%; color: black; height: 1px; background-color:black;')

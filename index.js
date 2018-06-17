@@ -327,7 +327,7 @@ function filterEvents(eventData, categoryName) {
 
 
 	if (today > stop || today > start){
-		var string = "You can't provide dates before the current date-time. Please provide valid dates.";
+		var string = "Αδύνατη κράτηση. Η ημερομηνία αρχής της κράτησης, βρίσκεται πριν τη σημερινή μέρα.";
 		return string;
 	}
 	start = start.getTime() / 1000;
@@ -335,12 +335,12 @@ function filterEvents(eventData, categoryName) {
 	console.log(start + " " + stop);
 
 	if (start == stop){
-		var string = "Start and Stop date are the same, please change";
+		var string = "Αδύνατη κράτηση. Η αρχή και το τέλος της κράτησης συμπίπτουν.";
 		return string;
 	}
 
 	if (start > stop){
-		var string = "Start date is greater than the stop date. Repeat the procedure.";
+		var string = "Η ημερομηνία αρχής της κράτησης, είναι μεταγενέστερη από αυτή του τερματισμού. Παρακαλώ διορθώστε.";
 		return string;
 	}
 
@@ -428,7 +428,7 @@ function getMessage(start, stop, categoryName) {
 				console.log(carsBooked);
 	
 				if (eqSet(carsBooked, allCars)){
-					return resolve("Unavaliable dates. All cars are booked.");
+					return resolve("Αδύνατη κράτηση. Αυτοκίνητα μη διαθέσιμα.");
 				}
 				else
 					return resolve("");
@@ -467,10 +467,8 @@ app.post("/addEvent", (req, res) => {
 						var tempSum = [];
 						for (var i = 0; i < cars.length; i++){
 							var sum = 0;
-							console.log("newnewnewnewnew");
 							for (var j = 0; j < bookedCarsArr.length; j++){
 								if (bookedCarsArr[j].carName === cars[i].carName && bookedCarsArr[j].criticalSeconds[0] > maxSec){
-									console.log("timestimes");
 									sum = sum + bookedCarsArr[j].criticalSeconds[1] - bookedCarsArr[j].criticalSeconds[0];
 								}
 							}
@@ -499,7 +497,7 @@ app.post("/addEvent", (req, res) => {
 									updateEventsMongoose(bookedCarsArr[i].eventId, cars[tempSum[j].newCarNo].carName).then( item => {
 									
 										bookedCarsToDelete.push(i);
-										console.log("done");
+									//	console.log("done");
 									});
 								}
 							}
@@ -656,9 +654,8 @@ function shuffleEvents(cars, events) {
 
 						for (var i = 0; i < bookedCarsArr.length; i++){
 							if (bookedCarsArr[i].startDate > today){
-								console.log("giatiedw");
 									updateEventsMongoose(bookedCarsArr[i].eventId, bookedCarsArr[i].carName).then( item => {
-										console.log("done");
+									//	console.log("done");
 									});
 							}
 						}

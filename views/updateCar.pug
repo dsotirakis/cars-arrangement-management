@@ -2,21 +2,21 @@
 doctype html
 html
   head
-    title Update Cars Priority
+    title Επεξεργασία προτεραιότητας αυτοκινήτων
   body
 
     form(method = 'get', action = '/home')
       input(type= "submit", value = "Home")
-    h1 Update Cars Priority
+    h1 Επεξεργασία προτεραιότητας αυτοκινήτων
 
       if cars.length > 0
-        h2 Update Car Priority
+        h2 Επεξεργασία
         form(method = 'post', action = '/updateCar')
           br
           each car in cars
-            td #{car.carName + " - Priority Value: " + car.weight + " --> "}
+            td #{car.carName + " - Τιμή προτεραιότητας: " + car.weight + " --> "}
             input(class = "categ", type = 'text',  name = 'weight', value = car.weight)
             input(type = "hidden", value = {'carName' : car.carName,'categoryName' : car.categoryName}, name = 'new')
             br
             br
-          input(type = 'submit', value = 'Update Values')
+          input(type = 'submit', value = 'Ανανέωση')
