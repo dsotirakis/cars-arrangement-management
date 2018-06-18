@@ -184,12 +184,11 @@ html
       carsToString.sort(function(a,b){return a.weight - b.weight});
       var len = carsToString.length;
       for (var i = 0; i < len; i++) {
-        arr.push({"content": (i+1) + " - " + carsToString[i].brand + " - " + carsToString[i].carName, "id": carsToString[i].carName, "value": (i+1), className: 'lele'});
+        arr.push({"content": (i+1) + " - " + carsToString[i].brand + " - " + carsToString[i].carName, "id": carsToString[i].carName, "value": (i+1), className: carsToString[i].categoryName});
       }
 
       var datas = new vis.DataSet(arr);
       
-
       // function to make all groups visible again
       function showAllGroups(){
       groups.forEach(function(group){
@@ -214,7 +213,6 @@ html
       var datas2 = new vis.DataSet(arr2);
       // create a dataset with items
       // note that months are zero-based in the JavaScript Date object, so month 3 is April
-
       // create visualization
       var container = document.getElementById('visualization');
       var options = {

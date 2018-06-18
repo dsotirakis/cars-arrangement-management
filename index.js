@@ -139,31 +139,37 @@ app.post("/updateCar", (req, res) => {
 		console.log("sa;a: " + temp[i].categoryName);
 	
       // After succ
+    var promises = [];
 	for (var i = 0; i < req.body.weight.length; i++){
 
 		console.log(temp[i].carName + " '' " + req.body.weight[i]);
-		
-		Car.update( {"carName" : temp[i].carName}, {"weight":req.body.weight[i]}).then(item => {
-			console.log("Done");
-		});
+	
+		promises.push(updateCarsMongoose(temp[i].carName, req.body.weight[i]));
 	}
+	
+	Promise.all(promises).then( item => {
+		redirectFunction(app, temp[0].categoryName);
+		res.redirect(301, '/groups' + temp[0].categoryName);
+	});
 
-
-	Event.find({categoryName:temp[0].categoryName}, function(err, events) {
-		if (err) throw err;
-
-		Car.find({categoryName:temp[0].categoryName}, null, {sort:{'weight':1}}, function(err, cars) {
-		  	if (err) throw err;
-
-			
-			shuffleEvents(cars, events);
-
-			redirectFunction(app, temp[0].categoryName);
-			res.redirect(301, '/groups' + temp[0].categoryName);
-			});
-		});
 			
 });
+
+
+function updateCarsMongoose(carName, weight){
+	return new Promise(function(resolve, reject) {
+		
+		Car.findOneAndUpdate({ carName: carName}, { $set: { weight: weight }}, function(err, res) {
+			if (err) {
+				console.log("Something went wrong!");
+			}
+			else{
+				return resolve();
+			}
+		});
+	});
+}
+
 
 app.post("/addCategory", (req, res) => {
 	var myData = new Category(req.body);
@@ -208,7 +214,7 @@ app.post("/deleteEvent", (req, res) => {
 	var temp = JSON.parse(req.body.event);
 	Event.deleteOne({ _id : temp.id }).then(item => {
 		
-		
+			console.log("here");	
 			Event.find({categoryName:temp.categoryName}, function(err, events) {
 		  		if (err) throw err;
 
@@ -439,10 +445,10 @@ app.post("/addEvent", (req, res) => {
 								var sum = 0;
 								for (var j = 0; j < bookedCarsArr.length; j++){
 									if (bookedCarsArr[j].carName === cars[i].carName && bookedCarsArr[j].criticalSeconds[0] > maxAssociatedSec){
-										sum = sum + bookedCarsArr[j].criticalSeconds[1] - bookedCarsArr[j].criticalSeconds[0];
+										sum = sum + (bookedCarsArr[j].criticalSeconds[1] - bookedCarsArr[j].criticalSeconds[0]);
 									}
 								}
-								console.log(cars[i].carName);
+								console.log(cars[i].carName + " - " + sum);
 								tempSum.push({sum: sum, newCarNo: i});
 							}
 	
@@ -465,6 +471,7 @@ app.post("/addEvent", (req, res) => {
 									if (bookedCarsArr[i].carName === cars[j].carName && bookedCarsArr[i].criticalSeconds[0] > maxAssociatedSec){
 								
 										promises.push(updateEventsMongoose(bookedCarsArr[i].eventId, cars[tempSum[j].newCarNo].carName));
+										console.log("cars: " + cars[j].carName + " - " + cars[tempSum[j].newCarNo].carName);
 									}
 								}
 									console.log("before: " + bookedCarsArr.length);
@@ -527,8 +534,8 @@ function shuffleEvents(cars, events) {
 						
 						eventsArr.push({eventId: events[i].id, totalTime: 100000 - totalTime, criticalSeconds: criticalSeconds, startDate: startDate_toDate, prevCarName: events[i].carName});
 					}
-
-						arraySort(eventsArr, ['startDate', 'totalTime']);
+						
+						arraySort(eventsArr, 'totalTime', {reversed: true});
 						
 						
 						for (var i = 0; i < eventsArr.length; i++){
@@ -655,10 +662,10 @@ function redirectFunction(app, catName) {
 
 app.post('/groups', function(req, res){
 	var curCategory = req.body.categoryName;
-	mongoose.model("Car").find({categoryName: req.body.categoryName}, function(err, cars) {
+	mongoose.model("Car").find({categoryName: curCategory}, function(err, cars) {
 		mongoose.model("Event").find({categoryName: curCategory}, function (err, events) {
 			console.log("salasala: " + events.length);
-			mongoose.model("Category").find({categoryName: req.body.categoryName}, function(err, categories) {
+			mongoose.model("Category").find({categoryName: curCategory}, function(err, categories) {
    				res.render('view', {
 					curCategory : curCategory,
 	   				cars : cars,
