@@ -465,12 +465,21 @@ app.post("/addEvent", (req, res) => {
 								if (bookedCarsArr[i].modify == 0)
 									if (bookedCarsArr[i].criticalSeconds[1] > maxSec)
 										maxSec = bookedCarsArr[i].criticalSeconds[1];
-							
+					
+
+							var maxAssociatedSec = 0;
+							for (var i = 0; i < bookedCarsArr. length; i++)
+								if (bookedCarsArr[i].criticalSeconds[0] < maxSec)
+									if (bookedCarsArr[i].criticalSeconds[1] > maxAssociatedSec)
+										maxAssociatedSec = bookedCarsArr[i].criticalSeconds[1];
+
+							console.log("nininii: " + maxSec + " - " + maxAssociatedSec);
+
 							var tempSum = [];
 							for (var i = 0; i < cars.length; i++){
 								var sum = 0;
 								for (var j = 0; j < bookedCarsArr.length; j++){
-									if (bookedCarsArr[j].carName === cars[i].carName && bookedCarsArr[j].criticalSeconds[0] > maxSec){
+									if (bookedCarsArr[j].carName === cars[i].carName && bookedCarsArr[j].criticalSeconds[0] > maxAssociatedSec){
 										sum = sum + bookedCarsArr[j].criticalSeconds[1] - bookedCarsArr[j].criticalSeconds[0];
 									}
 								}
@@ -494,7 +503,7 @@ app.post("/addEvent", (req, res) => {
 	
 								var bookedCarsToDelete = [];
 								for (var i = 0; i < bookedCarsArr.length; i++){		
-									if (bookedCarsArr[i].carName === cars[j].carName && bookedCarsArr[i].criticalSeconds[0] > maxSec){
+									if (bookedCarsArr[i].carName === cars[j].carName && bookedCarsArr[i].criticalSeconds[0] > maxAssociatedSec){
 								
 										promises.push(updateEventsMongoose(bookedCarsArr[i].eventId, cars[tempSum[j].newCarNo].carName));
 									}
