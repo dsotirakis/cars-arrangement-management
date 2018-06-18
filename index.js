@@ -168,7 +168,7 @@ app.post("/updateCar", (req, res) => {
 app.post("/addCategory", (req, res) => {
 	var myData = new Category(req.body);
 	myData.save().then(item => {
-		res.redirect(301, '/');
+		res.redirect(301, '/home');
 	})
 	.catch(err => {
 		res.status(400).send("Unable to save to database");
