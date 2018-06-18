@@ -75,7 +75,7 @@ html
                 .col-sm-4
                   .col-md-4
                       br
-                      select(id = "carDel", name = "carName", size = cars.length)
+                      select(id = "carDel", name = "carName", size = 5)
                         each car in cars
                           option(value={'carName':car.carName, 'categoryName':car.categoryName}) #{car.carName + " - " + car.brand}
                         br
