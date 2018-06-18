@@ -361,12 +361,14 @@ function eqSet(as, bs) {
 function updateEventsMongoose(id, carName){
 	return new Promise(function(resolve, reject) {
 		
-		Event.update({ _id: id}, { $set: { carName: carName }}, function(err, res) {
+		Event.findOneAndUpdate({ _id: id}, { $set: { carName: carName }}, function(err, res) {
 			if (err) {
 				console.log("Something went wrong!");
 			}
-			else
+			else{
+				console.log("id: " + id);
 				return resolve();
+			}
 		});
 	});
 }
@@ -456,83 +458,83 @@ app.post("/addEvent", (req, res) => {
 				Car.find({categoryName:req.body.categoryName}, null, {sort:{'weight':1}}, function(err, cars) {
 		  			if (err) throw err;
 					
-						var bookedCarsArr = shuffleEvents(cars,events)	
-
-						var maxSec = 0;
-						for (var i = 0; i < bookedCarsArr.length; i++)
-							if (bookedCarsArr[i].modify == 0)
-								if (bookedCarsArr[i].criticalSeconds[1] > maxSec)
-									maxSec = bookedCarsArr[i].criticalSeconds[1];
+						shuffleEvents(cars,events).then( bookedCarsArr => {	
+						
+							var maxSec = 0;
+							for (var i = 0; i < bookedCarsArr.length; i++)
+								if (bookedCarsArr[i].modify == 0)
+									if (bookedCarsArr[i].criticalSeconds[1] > maxSec)
+										maxSec = bookedCarsArr[i].criticalSeconds[1];
 							
-						var tempSum = [];
-						for (var i = 0; i < cars.length; i++){
-							var sum = 0;
-							for (var j = 0; j < bookedCarsArr.length; j++){
-								if (bookedCarsArr[j].carName === cars[i].carName && bookedCarsArr[j].criticalSeconds[0] > maxSec){
-									sum = sum + bookedCarsArr[j].criticalSeconds[1] - bookedCarsArr[j].criticalSeconds[0];
+							var tempSum = [];
+							for (var i = 0; i < cars.length; i++){
+								var sum = 0;
+								for (var j = 0; j < bookedCarsArr.length; j++){
+									if (bookedCarsArr[j].carName === cars[i].carName && bookedCarsArr[j].criticalSeconds[0] > maxSec){
+										sum = sum + bookedCarsArr[j].criticalSeconds[1] - bookedCarsArr[j].criticalSeconds[0];
+									}
 								}
+								console.log(cars[i].carName);
+								tempSum.push({sum: sum, newCarNo: i});
 							}
-							console.log(cars[i].carName);
-							tempSum.push({sum: sum, newCarNo: i});
-						}
-
-						for (var i = 0; i < tempSum.length; i++){
-							console.log(tempSum[i]);
-						}
+	
+							for (var i = 0; i < tempSum.length; i++){
+								console.log(tempSum[i]);
+							}
 					
-      					tempSum.sort(function(a,b){return b.sum - a.sum});
-						for (var i = 0; i < tempSum.length; i++){
-							console.log(tempSum[i]);
-						}
-      					console.log("cars: " + cars);
+	      					tempSum.sort(function(a,b){return b.sum - a.sum});
+							for (var i = 0; i < tempSum.length; i++){
+								console.log(tempSum[i]);
+							}
+      						console.log("cars: " + cars);
+							var promises = [];
 
-
-						for (var j = 0; j < cars.length; j++){
+							for (var j = 0; j < cars.length; j++){
 
 	
-							var bookedCarsToDelete = [];
-							for (var i = 0; i < bookedCarsArr.length; i++){		
-								if (bookedCarsArr[i].carName === cars[j].carName && bookedCarsArr[i].criticalSeconds[0] > maxSec){
+								var bookedCarsToDelete = [];
+								for (var i = 0; i < bookedCarsArr.length; i++){		
+									if (bookedCarsArr[i].carName === cars[j].carName && bookedCarsArr[i].criticalSeconds[0] > maxSec){
 								
-									updateEventsMongoose(bookedCarsArr[i].eventId, cars[tempSum[j].newCarNo].carName).then( item => {
-									
-										bookedCarsToDelete.push(i);
-									//	console.log("done");
-									});
+										promises.push(updateEventsMongoose(bookedCarsArr[i].eventId, cars[tempSum[j].newCarNo].carName));
+									}
 								}
+									console.log("before: " + bookedCarsArr.length);
+								for (var i = 0; i < bookedCarsToDelete.length; i++){
+									bookedCarsArr.splice(bookedCarsToDelete[i], 1);
+								}
+									console.log("agter: " + bookedCarsArr.length);
 							}
-								console.log("before: " + bookedCarsArr.length);
-							for (var i = 0; i < bookedCarsToDelete.length; i++){
-								bookedCarsArr.splice(bookedCarsToDelete[i], 1);
-							}
-								console.log("agter: " + bookedCarsArr.length);
-						}
 
-						redirectFunction(app, req.body.categoryName);
-						res.redirect(301, '/groups' + req.body.categoryName);
-					}).catch(err => { res.status(400).send("Error1"); });
-				}).catch( err => { res.status(400).send("Error2"); });
+							Promise.all(promises).then( item => {
+								redirectFunction(app, req.body.categoryName);
+								res.redirect(301, '/groups' + req.body.categoryName);
+								console.log("neanias");
+							});
+							});
+						}).catch(err => { res.status(400).send("Error1"); });
+					}).catch( err => { res.status(400).send("Error2"); });
 
 
-				})
-				.catch(err => {
-					res.status(400).send("Unable to save to database");
-				});
-		}
-		else{
+					})
+					.catch(err => {
+						res.status(400).send("Unable to save to database");
+					});
+			}
+			else{
 			//res.status(400).send("Reasons: " + message1 + " - " +message2);
-			res.render('error', {
-				curCategory: req.body.categoryName,
-				message: message1 + " - " + message2
-			});
-		}
-	});
+				res.render('error', {
+					curCategory: req.body.categoryName,
+					message: message1 + " - " + message2
+				});
+			}
+		});
 
 });
 
 function shuffleEvents(cars, events) {
 
-	
+	return new Promise(function(resolve, reject) {
 					var today = new Date();
 					
 					// Initialize auxiliary variables.
@@ -651,16 +653,17 @@ function shuffleEvents(cars, events) {
 							}
 						}
 
-
+						var promises = [];
 						for (var i = 0; i < bookedCarsArr.length; i++){
 							if (bookedCarsArr[i].startDate > today){
-									updateEventsMongoose(bookedCarsArr[i].eventId, bookedCarsArr[i].carName).then( item => {
-									//	console.log("done");
-									});
+									promises.push(updateEventsMongoose(bookedCarsArr[i].eventId, bookedCarsArr[i].carName));
 							}
 						}
 
-	return bookedCarsArr;
+			Promise.all(promises).then( item => {
+				return 	resolve(bookedCarsArr);
+			});
+	});
 
 }
 
