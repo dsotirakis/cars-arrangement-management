@@ -3,20 +3,14 @@ var app = express();
 var bodyParser = require('body-parser');
 var autoIncrement = require('mongoose-auto-increment');
 var stringify = require('json-stringify');
-var yesno = require('yesno');
 var l = require('passport-login-check')
 
 var mongoose = require("mongoose");
 var session = require('express-session')
 var cookieParser = require('cookie-parser');
-const TreeMap = require("treemap-js");
 const passport = require('passport');
-const MultiMap = require('multimap');
 const sortMap = require('sort-map');
 const arraySort = require('array-sort');
-const prompt = require('node-ask').prompt;
-const confirm = require('node-ask').confirm;
-const multiline = require('node-ask').multiline;
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'pug');
@@ -114,41 +108,6 @@ var eventSchema = new mongoose.Schema({
 });
 
 var Event = mongoose.model("Event", eventSchema);
-
-// Define category page
-app.get("/category", (req, res) => {
-	mongoose.model("Category").find(function (err, categories) {
- 		res.render('category', {
-			categories : categories,
-		});
-	});
-});
-
-app.get("/car", (req, res) => {
-	mongoose.model("Car").find(function(err, cars) {
-		mongoose.model("Category").find(function (err, categories) {
-   			res.render('car', {
-				categories : categories,
-				cars : cars
-			});
-		});
-	});
-});
-
-app.get("/event", (req, res) => {
-	var today = new Date();
-	var ran = new Date (2018,5,5);
-	if (today < ran)
-		console.log("today" + today);
-	mongoose.model("Event").find(function(err, events) {
-		mongoose.model("Category").find(function (err, categories) {
-   			res.render('event', {
-				categories : categories,
-				events : events
-			});
-		});
-	});
-});
 
 function adminIsLoggedIn(req, res, next) {
 
@@ -694,21 +653,6 @@ function redirectFunction(app, catName) {
 	});
 };
 
-
-Event.find({}, function(err, events) {
-  	if (err) throw err;
-  	console.log("len: " + events.length);
-});
-
-app.get('/test', function(req, res){
-	mongoose.model("Category").find(function(err, categories) {
-   	res.render('first_view', {
-	   categories : categories
-   });
-});
-});
-
-
 app.post('/groups', function(req, res){
 	var curCategory = req.body.categoryName;
 	mongoose.model("Car").find({categoryName: req.body.categoryName}, function(err, cars) {
@@ -735,17 +679,6 @@ app.post('/updateCarForm', function(req, res){
 				});
 	});
 });
-
-app.get('/show_events', function(req, res){
-	mongoose.model("Event").find(function(err, events) {
-   	res.render('showEvents', {
-	   events : events
-   });
-});
-});
-
-
-
 
 app.listen(process.env.PORT || 8080, function() {
 	console.log("Open server.");
