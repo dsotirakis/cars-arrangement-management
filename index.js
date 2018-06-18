@@ -221,10 +221,70 @@ app.post("/deleteEvent", (req, res) => {
 				Car.find({categoryName:temp.categoryName}, null, {sort:{'weight':1}}, function(err, cars) {
 		  			if (err) throw err;
 					
-					shuffleEvents(cars,events);
+						shuffleEvents(cars,events).then( bookedCarsArr => {	
+						
+							var maxSec = 0;
+							for (var i = 0; i < bookedCarsArr.length; i++)
+								if (bookedCarsArr[i].modify == 0)
+									if (bookedCarsArr[i].criticalSeconds[1] > maxSec)
+										maxSec = bookedCarsArr[i].criticalSeconds[1];
+					
 
-					redirectFunction(app, temp.categoryName);
-					res.redirect(301, '/groups' + temp.categoryName);
+							var maxAssociatedSec = 0;
+							for (var i = 0; i < bookedCarsArr. length; i++)
+								if (bookedCarsArr[i].criticalSeconds[0] < maxSec)
+									if (bookedCarsArr[i].criticalSeconds[1] > maxAssociatedSec)
+										maxAssociatedSec = bookedCarsArr[i].criticalSeconds[1];
+
+							console.log("nininii: " + maxSec + " - " + maxAssociatedSec);
+
+							var tempSum = [];
+							for (var i = 0; i < cars.length; i++){
+								var sum = 0;
+								for (var j = 0; j < bookedCarsArr.length; j++){
+									if (bookedCarsArr[j].carName === cars[i].carName && bookedCarsArr[j].criticalSeconds[0] > maxAssociatedSec){
+										sum = sum + (bookedCarsArr[j].criticalSeconds[1] - bookedCarsArr[j].criticalSeconds[0]);
+									}
+								}
+								console.log(cars[i].carName + " - " + sum);
+								tempSum.push({sum: sum, newCarNo: i});
+							}
+	
+							for (var i = 0; i < tempSum.length; i++){
+								console.log(tempSum[i]);
+							}
+					
+	      					tempSum.sort(function(a,b){return b.sum - a.sum});
+							for (var i = 0; i < tempSum.length; i++){
+								console.log(tempSum[i]);
+							}
+      						console.log("cars: " + cars);
+							var promises = [];
+
+							for (var j = 0; j < cars.length; j++){
+
+	
+								var bookedCarsToDelete = [];
+								for (var i = 0; i < bookedCarsArr.length; i++){		
+									if (bookedCarsArr[i].carName === cars[tempSum[j].newCarNo].carName && bookedCarsArr[i].criticalSeconds[0] > maxAssociatedSec){
+								
+										promises.push(updateEventsMongoose(bookedCarsArr[i].eventId, cars[j].carName));
+										console.log("cars: " + cars[j].carName + " - " + cars[tempSum[j].newCarNo].carName);
+									}
+								}
+									console.log("before: " + bookedCarsArr.length);
+								for (var i = 0; i < bookedCarsToDelete.length; i++){
+									bookedCarsArr.splice(bookedCarsToDelete[i], 1);
+								}
+									console.log("agter: " + bookedCarsArr.length);
+							}
+
+							Promise.all(promises).then( item => {
+								redirectFunction(app, req.body.categoryName);
+								res.redirect(301, '/groups' + req.body.categoryName);
+								console.log("neanias");
+							});
+							});
 				});
 			});
 
@@ -468,9 +528,9 @@ app.post("/addEvent", (req, res) => {
 	
 								var bookedCarsToDelete = [];
 								for (var i = 0; i < bookedCarsArr.length; i++){		
-									if (bookedCarsArr[i].carName === cars[j].carName && bookedCarsArr[i].criticalSeconds[0] > maxAssociatedSec){
+									if (bookedCarsArr[i].carName === cars[tempSum[j].newCarNo].carName && bookedCarsArr[i].criticalSeconds[0] > maxAssociatedSec){
 								
-										promises.push(updateEventsMongoose(bookedCarsArr[i].eventId, cars[tempSum[j].newCarNo].carName));
+										promises.push(updateEventsMongoose(bookedCarsArr[i].eventId, cars[j].carName));
 										console.log("cars: " + cars[j].carName + " - " + cars[tempSum[j].newCarNo].carName);
 									}
 								}
@@ -535,7 +595,7 @@ function shuffleEvents(cars, events) {
 						eventsArr.push({eventId: events[i].id, totalTime: 100000 - totalTime, criticalSeconds: criticalSeconds, startDate: startDate_toDate, prevCarName: events[i].carName});
 					}
 						
-						arraySort(eventsArr, 'totalTime', {reversed: true});
++						arraySort(eventsArr, 'totalTime', {reversed: true});
 						
 						
 						for (var i = 0; i < eventsArr.length; i++){
@@ -586,13 +646,11 @@ function shuffleEvents(cars, events) {
 											    	((eventsArr[i].criticalSeconds[0] <= tempBookedArr[j].criticalSeconds[0] - 10800) && (eventsArr[i].criticalSeconds[1] >= tempBookedArr[j].criticalSeconds[0] - 10800)) ||
 											    	((eventsArr[i].criticalSeconds[0] <= tempBookedArr[j].criticalSeconds[1] + 10800) && (eventsArr[i].criticalSeconds[1] >= tempBookedArr[j].criticalSeconds[1] + 10800))){
 											    	overlapFlag = true;
-										    		console.log("overlapping: " + i + " " + k);
 										    	
 										    		continue;
 												}
 												else{
 													if (!toAdd){
-														console.log("not: " + i + " " + k);
 														var tempBookedElement = [];
 														tempBookedElement.push({eventId: eventsArr[i].eventId, carName: cars[k].carName, criticalSeconds: eventsArr[i].criticalSeconds, startDate: eventsArr[i].startDate});
 														toAdd = true;

@@ -165,10 +165,10 @@ html
                 label(for='car') Διαγράψτε Κράτηση:
                   .col-sm-3
                     .col-md-3
-                        br
-                        select.selectpicker(data-live-search='true', data-show-subtext="true")
+                      br
+                      select(id = "eventDel", name = "event", size = 5 )
                           each event in events
-                            option(data-tokens=event.person, value={'id':event._id, 'categoryName':event.categoryName}) #{event.person + " - Car: " + event.carName}
+                            option(value={'id':event._id, 'categoryName':event.categoryName}) #{event.person + " - Car: " + event.carName}
                           br
                           input(type= "submit", class = "eventDel", value = "Διαγραφή")
 
