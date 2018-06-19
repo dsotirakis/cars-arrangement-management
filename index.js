@@ -280,8 +280,8 @@ app.post("/deleteEvent", (req, res) => {
 							}
 
 							Promise.all(promises).then( item => {
-								redirectFunction(app, req.body.categoryName);
-								res.redirect(301, '/groups' + req.body.categoryName);
+								redirectFunction(app, temp.categoryName);
+								res.redirect(301, '/groups' + temp.categoryName);
 								console.log("neanias");
 							});
 							});
