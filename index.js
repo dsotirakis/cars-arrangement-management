@@ -1,22 +1,25 @@
+// Initialize auxiliary variables. Declare constants.
 var express = require("express");
 var app = express();
 var bodyParser = require('body-parser');
 var autoIncrement = require('mongoose-auto-increment');
 var stringify = require('json-stringify');
 var l = require('passport-login-check')
-
 var mongoose = require("mongoose");
 var session = require('express-session')
 var cookieParser = require('cookie-parser');
 const passport = require('passport');
 const sortMap = require('sort-map');
 const arraySort = require('array-sort');
+
+// Use and set attributes in the express app.
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'pug');
 app.set('views', './views');
-//app.use(express.static("public"));
 app.use(express.static("node_modules"));
+
+// Declare the home page.
 app.get("/", function(req, res) {
 
 	res.render('auth');
@@ -70,16 +73,21 @@ passport.use(new LocalStrategy(
 app.post('/',
   passport.authenticate('local', { failureRedirect: '/error' , successRedirect: '/home'})),
 
-	
+
+// Initialize Mongoose properties.
 mongoose.Promise = global.Promise;
 mongoose.connect("mongodb+srv://dimitris:abc123456789@bluerent-nqiw4.mongodb.net/test?retryWrites=false");
 //autoIncrement.initialize(mongoose.createConnection("mongodb://localhost:27017/node-demo2"));
 
+// Declare the Schema constant.
 const Schema = mongoose.Schema;
+
+// Define User model.
 const UserDetail = new Schema({
       username: String,
       password: String
     });
+
 const UserDetails = mongoose.model('userInfo', UserDetail, 'userInfo');
 
 // Define Category Model
@@ -89,6 +97,7 @@ var categorySchema = new mongoose.Schema({
 
 var Category = mongoose.model("Category", categorySchema);
 
+// Define Car Model
 var carSchema = new mongoose.Schema({
     carName: String,
     categoryName: String,
@@ -97,8 +106,8 @@ var carSchema = new mongoose.Schema({
 });
 
 var Car = mongoose.model("Car", carSchema);
-// Define index page
 
+// Define Event Model.
 var eventSchema = new mongoose.Schema({
 	startDate : Date,
 	endDate : Date,
@@ -109,16 +118,21 @@ var eventSchema = new mongoose.Schema({
 
 var Event = mongoose.model("Event", eventSchema);
 
+/**
+ * This function is responsible for checking if the the user is logged in
+ * every time.
+ **/
 function adminIsLoggedIn(req, res, next) {
 
-    // if user is authenticated in the session, carry on 
+    // If user is authenticated in the session, carry on 
     if (req.isAuthenticated())
         return next();
 
-    // if they aren't redirect them to the home page
+    // If they aren't redirect them to the home page
     res.redirect('/');
 }
 
+// Get the homepage, checking if the user is authenticated.
 app.get("/home", adminIsLoggedIn, (req, res) => {
 	mongoose.model("Category").find({}, null, {sort:{'categoryName': 1}}, function (err, categories) {
 		res.render('chooseGroups', {
@@ -127,6 +141,7 @@ app.get("/home", adminIsLoggedIn, (req, res) => {
 	});
 });
 
+// Update cars process.
 app.post("/updateCar", (req, res) => {
 	console.log("body:: " + req.body.weight);
 	console.log("lelos: " + req.body.new.length);
@@ -155,7 +170,7 @@ app.post("/updateCar", (req, res) => {
 			
 });
 
-
+// Use promise to update car priorities.
 function updateCarsMongoose(carName, weight){
 	return new Promise(function(resolve, reject) {
 		
@@ -170,7 +185,7 @@ function updateCarsMongoose(carName, weight){
 	});
 }
 
-
+// Add category POST method.
 app.post("/addCategory", (req, res) => {
 	var myData = new Category(req.body);
 	myData.save().then(item => {
@@ -181,6 +196,7 @@ app.post("/addCategory", (req, res) => {
 	});
 });
 
+// Add car POST method.
 app.post("/addCar", (req, res) => {
 	var myData = new Car(req.body);
 	var today  = new Date();
@@ -207,6 +223,7 @@ app.post("/addCar", (req, res) => {
 	});
 });
 
+// Delete event POST method.
 app.post("/deleteEvent", (req, res) => {
 
 	console.log(req.body.event);
@@ -294,6 +311,7 @@ app.post("/deleteEvent", (req, res) => {
 			});
 });
 
+// Delete category POST method.
 app.post("/deleteCategory", (req, res) => {
 	Category.deleteOne({categoryName : req.body.categoryName}).then(item => {
 
@@ -309,6 +327,7 @@ app.post("/deleteCategory", (req, res) => {
 	}).catch(res.redirect(301, '/'));
 });
 
+// Delete car POST method.
 app.post("/deleteCar", (req, res) => {
 	
 	var temp = JSON.parse(req.body.carName);
@@ -344,13 +363,17 @@ app.post("/deleteCar", (req, res) => {
 
 	});
 
+/**
+ * This function is responsible for filtering events based on certain criteria.
+ **/
 function filterEvents(eventData, categoryName) {
 
+	// Initialize auxiliary variables.
 	var start = new Date(eventData.startDate);
 	var stop  = new Date(eventData.endDate);	
 	var today = new Date();
 
-
+	// If the start date or stop date is before the current date, don't save.
 	if (today > stop || today > start){
 		var string = "Αδύνατη κράτηση. Η ημερομηνία αρχής της κράτησης, βρίσκεται πριν τη σημερινή μέρα.";
 		return string;
@@ -359,18 +382,19 @@ function filterEvents(eventData, categoryName) {
 	stop = stop.getTime() / 1000;
 	console.log(start + " " + stop);
 
+	// If start and stop date are the same, then don't save.
 	if (start == stop){
 		var string = "Αδύνατη κράτηση. Η αρχή και το τέλος της κράτησης συμπίπτουν.";
 		return string;
 	}
 
+	// If start date is after stop date, don't save,
 	if (start > stop){
 		var string = "Η ημερομηνία αρχής της κράτησης, είναι μεταγενέστερη από αυτή του τερματισμού. Παρακαλώ διορθώστε.";
 		return string;
 	}
 
-	
-
+	// Return defailt value.
 	return "";
 }
 
@@ -383,6 +407,9 @@ function eqSet(as, bs) {
     return true;
 }
 
+/**
+ * This function is responsible for updating events. Returns a promise resolve.
+ **/
 function updateEventsMongoose(id, carName){
 	return new Promise(function(resolve, reject) {
 		
@@ -398,8 +425,9 @@ function updateEventsMongoose(id, carName){
 	});
 }
 
-
-
+/**
+ * This function is responsible for checking the availability of cars.
+ **/
 function getMessage(start, stop, categoryName) {
 	return new Promise(function(resolve, reject) {
 		Event.find({categoryName:categoryName}, function(err, events) {
