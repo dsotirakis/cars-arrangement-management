@@ -120,7 +120,7 @@ function adminIsLoggedIn(req, res, next) {
 }
 
 app.get("/home", adminIsLoggedIn, (req, res) => {
-	mongoose.model("Category").find(function (err, categories) {
+	mongoose.model("Category").find({}, null, {sort:{'categoryName': 1}}, function (err, categories) {
 		res.render('chooseGroups', {
 			categories: categories
 		});
