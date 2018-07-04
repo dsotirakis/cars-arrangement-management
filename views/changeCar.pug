@@ -1,0 +1,22 @@
+doctype html
+html
+  head
+    title Αλλαγή αυτοκινήτων
+  body
+
+    form(method = 'get', action = '/home')
+      input(type= "submit", value = "Home")
+    h1 Αλλαγή αυτοκινήτων
+
+      if cars.length > 0
+        h2 Επεξεργασία
+        form(method = 'post', action = '/changeCar')
+          br
+          each car in cars
+            td #{car.carName + " - Μοντέλο: " + car.brand + " --> "}
+            input(class = "categ", type = 'text',  name = 'carName', value = car.carName)
+            input(class = "categ", type = 'text',  name = 'brand', value = car.brand)
+            input(type = "hidden", value = {'id' : car._id,'categoryName' : car.categoryName}, name = 'new')
+            br
+            br
+          input(type = 'submit', value = 'Πραγματοποίηση Αλλαγών')

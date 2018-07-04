@@ -42,7 +42,7 @@ html
     link(rel='stylesheet' href='bower_components/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css')
   body
     p
-      | This timeline displays the total booked cars. Every rectangle represents the start and stop date of the event.
+      | Timeline for category #{curCategory}
 
 
       form(method = 'get', action = '/home')
@@ -81,16 +81,24 @@ html
                         br
                         input(type= "submit", class = "carDel", value = "Διαγραφή Αυτοκινήτου")
 
+          .row
+            form.form(action='/updateCarForm' method='post')
+              .form-group.col-xs-3
+                label(for='car') Επεξεργασία προτεραιότητας Αυτοκινήτων:
+                  .col-sm-9
+                    .col-md-9
+                      br
+                      input(type = 'hidden', name = 'categoryName', value = curCategory)
+                      input(type = 'submit', value= 'Επεξεργασία προτεραιότητας')
 
-          form.form(action='/updateCarForm' method='post')
-            .form-group.col-xs-3
-              label(for='car') Επεξεργασία προτεραιότητας Αυτοκινήτων:
-                .col-sm-9
-                  .col-md-9
-                    br
-                    input(type = 'hidden', name = 'categoryName', value = curCategory)
-                    input(type = 'submit', value= 'Επεξεργασία προτεραιότητας')
-
+            form.form(action='/changeCarVars' method='post')
+              .form-group.col-xs-3
+                label(for='car') Αλλαγή Αυτοκινήτων:
+                  .col-sm-9
+                    .col-md-9
+                      br
+                      input(type = 'hidden', name = 'categoryName', value = curCategory)
+                      input(type = 'submit', value= 'Αλλαγή αυτοκινήτων')
         br
       br
 
@@ -187,8 +195,11 @@ html
         arr.push({"content": (i+1) + " - " + carsToString[i].brand + " - " + carsToString[i].carName, "id": carsToString[i].carName, "value": (i+1), className: carsToString[i].categoryName});
       }
 
+      var carsRem = !{JSON.stringify(carsRemaining)};
+      if (carsRem <= 3)
+        alert("Remaining cars: " + carsRem);
+
       var datas = new vis.DataSet(arr);
-      
       // function to make all groups visible again
       function showAllGroups(){
       groups.forEach(function(group){
@@ -204,7 +215,9 @@ html
                    end: eventsToString[i].endDate, 
                    group: eventsToString[i].carName, 
                    className:eventsToString[i].carName, 
-                   content: eventsToString[i].person, 
+                   content: eventsToString[i].person + " / Start Time: " + new Date(eventsToString[i].startDate).getHours() + 
+                   ":" + new Date(eventsToString[i].startDate).getMinutes() + " ---- End Time: " + new Date(eventsToString[i].endDate).getHours() + ":" +
+                   new Date(eventsToString[i].endDate).getMinutes(),
                    id:eventsToString[i]._id});
       }
 
